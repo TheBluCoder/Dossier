@@ -50,9 +50,16 @@ Copy `.env.example` → `.env` (repo root; compose passes it to the backend).
   the seeded demo case is browsable.
 - `ELEVENLABS_API_KEY` — required only for voice playback (503 otherwise; the
   frontend treats TTS failures as non-fatal).
-- `DEV_AUTH_BYPASS=true` (default) — every request resolves to user `dev-user`;
-  the frontend shows "Continue as Guest". For real Google Sign-In set
-  `DEV_AUTH_BYPASS=false`, `CLERK_JWKS_URL`, and `VITE_CLERK_PUBLISHABLE_KEY`.
+- `DEV_AUTH_BYPASS=true` (default in `.env.example`) — every request resolves
+  to user `dev-user`; the frontend shows "Continue as Guest". For real Google
+  Sign-In set `DEV_AUTH_BYPASS=false` and `CLERK_JWKS_URL` in the root `.env`.
+- Clerk is set up via the Clerk CLI, linked to the app **"ai detective"**
+  (`app_3GMZZCMfwY7f2EFfp5JlcmjvVVJ`). The frontend publishable key lives in
+  `frontend/.env.local` (gitignored) — refresh it with
+  `cd frontend && clerk env pull`. It is deliberately NOT passed through
+  docker-compose; the mounted `.env.local` is the single source. Frontend SDK
+  is `@clerk/react` (the old `@clerk/clerk-react` is deprecated — don't
+  reintroduce it).
 
 ## Architecture
 
@@ -152,7 +159,6 @@ Not done (Priority 3/4 in `docs/GDD.md` §10):
 - Relationship map, interactive timeline, contradiction highlighting
 - Real token-level streaming from Gemini (currently the validated full reply is
   chunked into SSE tokens)
-- Clerk flow is untested against a real Clerk app; guest mode is the tested path
 
 ## Git workflow
 
