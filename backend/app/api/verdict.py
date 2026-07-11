@@ -7,6 +7,7 @@ from app.core.auth import AuthUser, get_current_user
 from app.core.db import get_db
 from app.models.investigation import Verdict
 from app.services import gemini, sanitize
+from app.services.case_pool import kick_case_pool
 from app.services.profiles import apply_verdict_result
 
 router = APIRouter(prefix="/api/investigations/{investigation_id}", tags=["verdict"])
@@ -47,6 +48,22 @@ async def submit_verdict(
         },
     )
     reputation_change = await apply_verdict_result(user.id, correct, case.difficulty)
+
+    if correct:
+        # Solved cases leave the pool; a replacement is generated in the background.
+        await get_db().cases.update_one({"_id": oid(inv["case_id"])}, {"$set": {"status": "solved"}})
+        kick_case_pool()
+    else:
+        # Original design: a case that defeats 5 detectives is archived and replaced.
+        updated = await get_db().cases.find_one_and_update(
+            {"_id": oid(inv["case_id"])}, {"$inc": {"failure_count": 1}}, return_document=True
+        )
+        if updated and updated.get("failure_count", 0) >= 5:
+            await get_db().cases.update_one(
+                {"_id": oid(inv["case_id"])}, {"$set": {"status": "archived"}}
+            )
+            kick_case_pool()
+
     return {**sanitize.resolution(case, verdict_doc), "reputation_change": reputation_change}
 
 

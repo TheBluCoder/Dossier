@@ -79,7 +79,8 @@ class Case(BaseModel):
     crime_type: str
     difficulty: int = Field(ge=1, le=10)
     summary: str
-    status: str = "available"  # available | in_progress | solved
+    status: str = "available"  # available | solved | archived
+    failure_count: int = 0  # wrong verdicts across all players; archived at 5
     victim: Victim
     crime_scene: CrimeScene
     public_timeline: list[TimelineEntry] = []

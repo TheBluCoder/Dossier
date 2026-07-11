@@ -6,6 +6,15 @@ export interface CaseSummary {
   summary: string
   status: string
   suspect_count: number
+  evidence_count: number
+  failure_count: number
+  reward_rs: number
+}
+
+export interface CaseDocket {
+  entries: CaseSummary[]
+  pool_size: number
+  generating: boolean
 }
 
 export interface Victim {
@@ -56,7 +65,8 @@ export interface Evidence {
   reviewed?: boolean
 }
 
-export interface CaseBriefing extends Omit<CaseSummary, 'suspect_count'> {
+export interface CaseBriefing
+  extends Omit<CaseSummary, 'suspect_count' | 'evidence_count' | 'failure_count' | 'reward_rs'> {
   victim: Victim
   crime_scene: CrimeScene
   public_timeline: TimelineEntry[]
