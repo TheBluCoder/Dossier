@@ -9,11 +9,15 @@ detective game built as a hackathon MVP (cuHacking). Players pick a case from a
 commission dashboard, read the briefing, review evidence, interrogate
 Gemini-powered suspect agents by text or voice, and submit a final accusation.
 
-This is a stripped-down rewrite of the larger Detective K Telegram Mini App
-(separate repo, Vue + Supabase). **Do not** port features from that project:
-no multiplayer, reputation, credits, payments, Telegram integration, retry
-cooldowns, leaderboards — and **no 3D crime scene** (evidence is text/media
-cards only). See `docs/GDD.md` §11 for the full out-of-scope list.
+A simplified reputation/tier system, global leaderboard, and player profiles
+are in scope. Out of scope: multiplayer functionality (the Versus menu exists
+but is locked "coming soon"), credits/XP/payments, achievements, Telegram
+integration, retry cooldowns, reputation decay — and **no 3D crime scene**
+(evidence is text/media cards only). See `docs/GDD.md` §11.
+
+Note: the larger Detective K app lives in a separate repo
+(`detective-k-game`, Vue + Supabase) — treat it as read-only reference
+material; never modify it from here.
 
 **Stack:** React 19 + TypeScript + Vite + Tailwind v4 (frontend) · FastAPI,
 Python 3.12 (backend) · MongoDB (Motor) · Gemini API (`google-genai`) ·
@@ -84,8 +88,9 @@ verdict is stored.
 ### Backend layout (backend/app/)
 
 - `api/` — routers: `cases.py`, `investigations.py` (notes/suspects/evidence),
-  `interrogation.py` (SSE chat), `verdict.py`, `audio.py`. Shared loaders with
-  ownership checks in `deps.py`.
+  `interrogation.py` (SSE chat), `verdict.py`, `audio.py`, `users.py`
+  (/api/me, /api/profile, /api/leaderboard). Shared loaders with ownership
+  checks in `deps.py`.
 - `core/` — `config.py` (pydantic-settings, reads `.env`), `db.py` (Motor
   client), `auth.py` (dev bypass or Clerk JWKS JWT verification).
 - `models/` — Pydantic models. `case.py` (Case/Suspect/Evidence/Solution),
@@ -109,6 +114,11 @@ verdict is stored.
 - **Verdict correctness is decided by the backend** (accused_id ==
   solution.culprit_id). Gemini only writes the flavor "commission review".
 - Conversation history sent to Gemini is capped at `max_history_messages` (12).
+- **Reputation/tiers** (`models/user.py`, applied in `services/profiles.py` on
+  verdict): correct = +75 + difficulty×5, wrong = −50, floored at 0. Tier
+  thresholds: Rookie 0 / Inspector 300 / Senior 800 / Master 1500 /
+  Legend 2000. Profiles are upserted into the `users` collection on every
+  /api/me|profile|leaderboard call.
 
 ### SSE protocol (interrogation)
 
@@ -121,9 +131,17 @@ persisted before streaming starts. Client parser:
 
 ### Frontend layout (frontend/src/)
 
-- `pages/` — `SignIn`, `Dashboard`, `Briefing`, `Investigation` (workspace:
-  suspects + evidence + notes), `Interrogation`, `Accusation`, `Resolution`.
+- `pages/` — `SignIn`, `Dashboard` (hub: stat row + case docket), `Briefing`,
+  `Investigation` (workspace: suspects + evidence + notes), `Interrogation`,
+  `Accusation`, `Resolution`, `Leaderboard`, `Profile`, `Multiplayer` (locked
+  "coming soon" lobby — menu exists, functionality intentionally disabled).
   Routes in `App.tsx`; all but SignIn are behind `RequireAuth`.
+- Noir design system in `index.css` + `components/`: single amber accent
+  (`gold-*`), uppercase tracked micro-labels over big mono values
+  (`StatCard`), tier colors gray/blue/purple/amber/yellow (`TierBadge`,
+  lucide icons Shield/Star/Medal/Award/Crown), `.section-title` amber bar
+  headers, `.lamp-flicker`, `.film-grain` overlay, amber-border hover as the
+  universal interactive signal.
 - `lib/auth.tsx` — auth abstraction. Guest mode (localStorage) or Clerk,
   selected by presence of `VITE_CLERK_PUBLISHABLE_KEY`. Pages only use
   `useAuth()`; nothing else imports Clerk. Registers the bearer-token provider
@@ -139,8 +157,9 @@ persisted before streaming starts. Client parser:
 
 ### MongoDB collections
 
-`cases`, `investigations`, `interrogations` (one doc per Q/A exchange). No
-`suspects`/`evidence` collections — they are embedded in the case document.
+`cases`, `investigations`, `interrogations` (one doc per Q/A exchange),
+`users` (profiles + reputation). No `suspects`/`evidence` collections — they
+are embedded in the case document.
 
 ## Current status (2026-07-11)
 

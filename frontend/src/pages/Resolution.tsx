@@ -39,6 +39,16 @@ export default function Resolution() {
             The culprit was{' '}
             <span className="text-gold-400">{resolution.culprit?.name ?? 'unknown'}</span>.
           </p>
+          {resolution.reputation_change !== undefined && (
+            <p
+              className={`mt-3 font-mono text-lg font-bold ${
+                resolution.reputation_change >= 0 ? 'text-emerald-400' : 'text-red-400'
+              }`}
+            >
+              {resolution.reputation_change >= 0 ? '+' : ''}
+              {resolution.reputation_change} Reputation
+            </p>
+          )}
         </div>
 
         {resolution.analysis && (

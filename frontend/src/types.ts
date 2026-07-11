@@ -98,6 +98,39 @@ export interface Message {
   created_at: string
 }
 
+export interface Tier {
+  name: string
+  min_rs: number
+  next_tier: string | null
+  next_tier_rs: number | null
+}
+
+export interface UserProfile {
+  user_id: string
+  name: string
+  avatar_url: string | null
+  reputation: number
+  cases_solved: number
+  cases_failed: number
+  cases_total: number
+  win_rate: number
+  tier: Tier
+  created_at: string
+}
+
+export interface ProfileWithHistory extends UserProfile {
+  history: { case_title: string; status: 'solved' | 'failed'; completed_at: string | null }[]
+}
+
+export interface LeaderboardEntry extends UserProfile {
+  rank: number
+}
+
+export interface Leaderboard {
+  entries: LeaderboardEntry[]
+  me: LeaderboardEntry
+}
+
 export interface Resolution {
   correct: boolean
   accused_id: string
@@ -108,4 +141,5 @@ export interface Resolution {
   canonical_timeline: TimelineEntry[]
   suspect_secrets: Record<string, string>
   key_clues: string[]
+  reputation_change?: number
 }

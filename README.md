@@ -5,7 +5,23 @@ commission dashboard, review evidence, interrogate Gemini-powered suspects by
 text or voice, and submit a final accusation.
 
 **Stack:** React + TypeScript + Vite + Tailwind v4 · FastAPI (Python 3.12) ·
-MongoDB · Gemini API · ElevenLabs
+MongoDB · Gemini API · ElevenLabs · Clerk (Google Sign-In)
+
+## Features
+
+- **Commission dashboard** — case docket with AI-generated mysteries, your
+  reputation, tier, and solve stats
+- **Investigation workspace** — suspects, evidence viewer, auto-saved notes
+- **Interrogation room** — free-form questioning of independent AI suspect
+  agents (streamed replies, emotional cues, trust/patience meters), evidence
+  presentation, voice input, and ElevenLabs voice replies
+- **Verdict & resolution** — accuse a suspect, earn or lose reputation, and
+  see the full case reconstruction
+- **Progression** — reputation score with detective tiers
+  (Rookie → Inspector → Senior → Master → Legend), global leaderboard, and
+  player profiles with case history
+- **Versus (coming soon)** — multiplayer lobby is visible but locked for the
+  hackathon build
 
 ## Quick start (Docker)
 
@@ -47,5 +63,9 @@ cd frontend && pnpm install && pnpm dev
 - Merge into `dev` when approved, delete the feature branch
 - `dev` is promoted to `main` after review
 
-See [CLAUDE.md](CLAUDE.md) for architecture, conventions, and current status.
-Game design: [docs/GDD.md](docs/GDD.md).
+## Documentation
+
+- [docs/GDD.md](docs/GDD.md) — game design document: gameplay, screens, API
+  surface, build priorities, and what's explicitly out of scope
+- [CLAUDE.md](CLAUDE.md) — architecture, conventions, game mechanics
+  (reputation/tiers, trust/patience), current status, and agent guidance

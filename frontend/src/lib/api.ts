@@ -3,9 +3,12 @@ import type {
   CaseSummary,
   Evidence,
   Investigation,
+  Leaderboard,
   Message,
+  ProfileWithHistory,
   Resolution,
   Suspect,
+  UserProfile,
 } from '../types'
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
@@ -34,6 +37,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
+  getMe: () => request<UserProfile>('/api/me'),
+  getProfile: () => request<ProfileWithHistory>('/api/profile'),
+  getLeaderboard: () => request<Leaderboard>('/api/leaderboard'),
+
   listCases: () => request<CaseSummary[]>('/api/cases'),
   generateCase: (crime_type = 'murder') =>
     request<CaseSummary>('/api/cases/generate', {

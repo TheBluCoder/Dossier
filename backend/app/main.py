@@ -1,11 +1,10 @@
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import audio, cases, interrogation, investigations, verdict
-from app.core.auth import AuthUser, get_current_user
+from app.api import audio, cases, interrogation, investigations, users, verdict
 from app.core.config import get_settings
 from app.core.db import close_db
 from app.services.seed import seed_demo_case
@@ -39,13 +38,9 @@ app.include_router(investigations.router)
 app.include_router(interrogation.router)
 app.include_router(verdict.router)
 app.include_router(audio.router)
+app.include_router(users.router)
 
 
 @app.get("/health")
 async def health():
     return {"status": "ok"}
-
-
-@app.get("/api/me")
-async def me(user: AuthUser = Depends(get_current_user)):
-    return user
