@@ -24,3 +24,6 @@ Thumbs.db
 
 # Runtime-generated media (TTS audio, video evidence)
 backend/media/
+
+# TS build cache
+*.tsbuildinfo
