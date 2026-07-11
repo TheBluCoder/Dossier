@@ -875,15 +875,19 @@ GET  /api/investigations/{investigation_id}/resolution
 
 # 11. Explicitly Out of Scope
 
+> Scope amendment (2026-07-11): a simplified **reputation system, detective
+> ranks (tiers), global leaderboard, and player profiles** were pulled INTO
+> scope (+75+difficulty×5 RS on correct verdicts / −50 on wrong; tiers
+> Rookie 0 / Inspector 300 / Senior 800 / Master 1500 / Legend 2000). The
+> **multiplayer menu exists** in the nav but its functionality stays out of
+> scope (locked "coming soon" lobby).
+
 Do not implement the following until the core single-player game works:
 
-- Multiplayer
+- Multiplayer (functionality — the locked menu/lobby page is in scope)
 - Team investigations
 - Competitive modes
 - Tournaments
-- Leaderboards
-- Reputation system
-- Detective ranks
 - XP
 - Credits
 - Payments

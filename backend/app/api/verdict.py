@@ -7,6 +7,7 @@ from app.core.auth import AuthUser, get_current_user
 from app.core.db import get_db
 from app.models.investigation import Verdict
 from app.services import gemini, sanitize
+from app.services.profiles import apply_verdict_result
 
 router = APIRouter(prefix="/api/investigations/{investigation_id}", tags=["verdict"])
 
@@ -45,7 +46,8 @@ async def submit_verdict(
             }
         },
     )
-    return sanitize.resolution(case, verdict_doc)
+    reputation_change = await apply_verdict_result(user.id, correct, case.difficulty)
+    return {**sanitize.resolution(case, verdict_doc), "reputation_change": reputation_change}
 
 
 @router.get("/resolution")
