@@ -1,0 +1,31 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-noir-950: #0c0a09;
+  --color-noir-900: #171412;
+  --color-noir-800: #221e1b;
+  --color-noir-700: #35302b;
+  --color-gold-400: #f5c542;
+  --color-gold-500: #d4a520;
+  --font-display: Georgia, 'Times New Roman', serif;
+}
+
+body {
+  @apply bg-noir-950 text-stone-200 antialiased;
+}
+
+.panel {
+  @apply rounded-lg border border-noir-700 bg-noir-900 p-4;
+}
+
+.btn-gold {
+  @apply rounded bg-gold-500 px-4 py-2 font-semibold text-noir-950 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.btn-ghost {
+  @apply rounded border border-noir-700 px-4 py-2 text-stone-300 transition hover:border-gold-500 hover:text-gold-400 disabled:opacity-40;
+}
+
+.input-noir {
+  @apply w-full rounded border border-noir-700 bg-noir-800 px-3 py-2 text-stone-200 placeholder-stone-500 outline-none focus:border-gold-500;
+}
