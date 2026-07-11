@@ -15,6 +15,7 @@ venv/
 node_modules/
 dist/
 .vite/
+.pnpm-store/
 
 # IDE / OS
 .vscode/

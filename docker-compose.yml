@@ -37,14 +37,20 @@ services:
     ports:
       - "5173:5173"
     environment:
+      # Clerk publishable key intentionally NOT passed here — it lives in
+      # frontend/.env.local (managed by `clerk env pull`, volume-mounted).
       VITE_API_URL: http://localhost:8000
-      VITE_CLERK_PUBLISHABLE_KEY: ${VITE_CLERK_PUBLISHABLE_KEY:-}
     volumes:
       - ./frontend:/code
-      - /code/node_modules
+      - frontend-modules:/code/node_modules
     depends_on:
       - backend
+    # Install inside the container (host node_modules can't be reused across
+    # the volume mount on Windows). CI=1 keeps pnpm non-interactive; the named
+    # volume caches the install so later startups take seconds.
+    command: sh -c "CI=1 pnpm install && pnpm dev"
 
 volumes:
   mongo-data:
   backend-media:
+  frontend-modules:

@@ -12,7 +12,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { ClerkProvider, useAuth as useClerkAuth, useClerk, useUser } from '@clerk/clerk-react'
+import { ClerkProvider, useAuth as useClerkAuth, useClerk, useUser } from '@clerk/react'
 import { setTokenProvider } from './api'
 
 const CLERK_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string | undefined
@@ -103,7 +103,7 @@ function ClerkBridge({ children }: { children: ReactNode }) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   if (!CLERK_KEY) return <GuestAuthProvider>{children}</GuestAuthProvider>
   return (
-    <ClerkProvider publishableKey={CLERK_KEY}>
+    <ClerkProvider publishableKey={CLERK_KEY} afterSignOutUrl="/">
       <ClerkBridge>{children}</ClerkBridge>
     </ClerkProvider>
   )
