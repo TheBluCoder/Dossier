@@ -23,9 +23,9 @@ export default function Resolution() {
   const suspectName = (sid: string) => suspects.find((s) => s.id === sid)?.name ?? sid
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Case Resolution" />
-      <main className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-3xl space-y-6 px-6 py-8">
         <div
           className={`panel border-2 text-center ${
             resolution.correct ? 'border-emerald-500' : 'border-red-500'

@@ -145,9 +145,9 @@ export default function Interrogation() {
   const ended = suspect.state?.conversation_ended
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="archive-page flex min-h-screen flex-col">
       <Header subtitle={`Interrogation — ${suspect.name}`} />
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 py-4">
+      <main className="archive-sheet mx-auto flex w-full max-w-3xl flex-1 flex-col px-6 py-4">
         <div className="panel mb-4 flex items-center justify-between gap-4">
           <div>
             <p className="font-display text-xl text-stone-100">{suspect.name}</p>

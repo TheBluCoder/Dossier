@@ -27,9 +27,9 @@ export default function Profile() {
       : 100
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Detective Profile" />
-      <main className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-3xl space-y-6 px-6 py-8">
         {/* Hero card */}
         <section className="panel border-gold-500/50 shadow-[0_0_24px_rgba(245,197,66,0.08)]">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">

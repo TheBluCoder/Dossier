@@ -45,6 +45,7 @@ export interface Suspect {
   alibi: string
   personality: string
   voice_id: string | null
+  image_url?: string | null
   state?: SuspectState
 }
 

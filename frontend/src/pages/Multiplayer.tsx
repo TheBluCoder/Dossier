@@ -41,9 +41,9 @@ export default function Multiplayer() {
   }, [])
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Versus Mode" />
-      <main className="mx-auto max-w-2xl space-y-5 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-2xl space-y-5 px-6 py-8">
         <h2 className="section-title lamp-flicker">Multiplayer</h2>
         <p className="text-sm text-stone-500">Go head-to-head on the same case. Fastest correct verdict wins.</p>
 

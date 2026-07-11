@@ -46,9 +46,9 @@ export default function Accusation() {
   if (!investigation) return <div className="p-10 text-center text-stone-500">Loading…</div>
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Final Accusation" />
-      <main className="mx-auto max-w-2xl space-y-6 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-2xl space-y-6 px-6 py-8">
         <div>
           <h2 className="font-display text-2xl text-gold-400">Name the Culprit</h2>
           <p className="mt-1 text-sm text-stone-500">

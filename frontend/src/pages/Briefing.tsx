@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
+import SuspectPortrait from '../components/SuspectPortrait'
 import { api } from '../lib/api'
 import type { CaseBriefing } from '../types'
 
@@ -31,23 +32,23 @@ export default function Briefing() {
   if (!briefing) return <div className="p-10 text-center text-stone-500">Opening case file…</div>
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Case Briefing" />
-      <main className="mx-auto max-w-4xl space-y-6 px-6 py-8">
-        <div>
-          <h2 className="font-display text-3xl text-gold-400">{briefing.title}</h2>
-          <p className="mt-2 text-stone-300">{briefing.summary}</p>
+      <main className="archive-sheet mx-auto max-w-6xl space-y-8 px-5 py-8 lg:px-8">
+        <div className="briefing-cover">
+          <div><p className="text-[9px] uppercase tracking-[.4em] text-[#73573b]">Official commission brief / Eyes only</p><h2 className="mt-3 font-display text-4xl font-bold uppercase text-[#291b12]">{briefing.title}</h2><p className="mt-4 max-w-3xl font-serif text-base leading-7 text-[#443022]">{briefing.summary}</p></div>
+          <span className="folder-stamp shrink-0">Unsolved</span>
         </div>
 
-        <section className="grid gap-4 md:grid-cols-2">
-          <div className="panel">
+        <section className="grid gap-px border border-noir-700 bg-noir-700 md:grid-cols-2">
+          <div className="briefing-entry">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-stone-500">Victim</h3>
             <p className="font-semibold text-stone-100">
               {briefing.victim.name}, {briefing.victim.age} — {briefing.victim.occupation}
             </p>
             <p className="mt-2 text-sm text-stone-400">{briefing.victim.background}</p>
           </div>
-          <div className="panel">
+          <div className="briefing-entry">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-stone-500">Crime Scene</h3>
             <p className="font-semibold text-stone-100">
               {briefing.crime_scene.location} · {briefing.crime_scene.time}
@@ -56,7 +57,7 @@ export default function Briefing() {
           </div>
         </section>
 
-        <section className="panel">
+        <section className="panel border-l-4 border-l-red-950">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-500">Initial Timeline</h3>
           <ul className="space-y-2">
             {briefing.public_timeline.map((t, i) => (
@@ -69,23 +70,25 @@ export default function Briefing() {
         </section>
 
         <section>
-          <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-500">
+          <h3 className="section-title mb-5 text-base">
             Suspects ({briefing.suspects.length})
           </h3>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {briefing.suspects.map((s) => (
-              <div key={s.id} className="panel">
-                <p className="font-display text-lg text-stone-100">{s.name}</p>
-                <p className="text-xs text-stone-500">
+              <div key={s.id} className="suspect-paper cursor-default">
+                <span className="suspect-paper-clip" aria-hidden />
+                <SuspectPortrait name={s.name} imageUrl={s.image_url} />
+                <div className="min-w-0"><p className="text-[8px] font-bold uppercase tracking-[.24em] text-[#6b5138]">Suspect intake</p><p className="mt-1 font-display text-lg font-bold uppercase text-[#2a1c12]">{s.name}</p>
+                <p className="text-[10px] uppercase text-[#5c4330]">
                   {s.age} · {s.occupation}
                 </p>
-                <p className="mt-2 text-sm text-stone-400">{s.relationship}</p>
+                <p className="mt-3 font-serif text-xs leading-5 text-[#443022]">{s.relationship}</p></div>
               </div>
             ))}
           </div>
         </section>
 
-        <section>
+        <section className="border-t border-noir-700 pt-6">
           <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-stone-500">
             Initial Evidence ({briefing.evidence.length})
           </h3>
