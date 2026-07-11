@@ -509,7 +509,9 @@ For the hackathon, the full solution is revealed after the final accusation.
 - Available case cards
 - Case status
 - Open Case button
-- Generate Case button for development or demo use
+- Cases are generated in the background: the commission always holds N open
+  cases, and solved ones are replaced automatically (no player-facing
+  generate button)
 
 ## 5.3 Case Briefing
 

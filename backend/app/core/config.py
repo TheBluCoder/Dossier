@@ -23,6 +23,9 @@ class Settings(BaseSettings):
 
     # Gameplay tuning
     max_history_messages: int = 12
+    # The commission always keeps this many open cases; solved ones are
+    # replaced by background Gemini generation.
+    case_pool_size: int = 3
 
 
 @lru_cache

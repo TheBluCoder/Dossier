@@ -1,12 +1,13 @@
-import { Award, CheckCircle, FilePlus, Zap } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { Award, CheckCircle, FileText, Zap } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import StatCard from '../components/StatCard'
 import { api } from '../lib/api'
-import type { CaseSummary, UserProfile } from '../types'
+import type { CaseDocket, CaseSummary, UserProfile } from '../types'
 
 const DIFFICULTY_LABELS = ['Trivial', 'Easy', 'Moderate', 'Hard', 'Brutal']
+const POLL_INTERVAL_MS = 8000
 
 function difficultyLabel(d: number) {
   return DIFFICULTY_LABELS[Math.min(4, Math.floor((d - 1) / 2))]
@@ -33,9 +34,16 @@ function CaseCard({ c, priority }: { c: CaseSummary; priority: boolean }) {
           </div>
         </div>
         <p className="flex-1 text-sm text-stone-400">{c.summary}</p>
+        {c.failure_count > 0 && (
+          <p className="text-xs text-red-400/80">
+            ⚠ {c.failure_count} detective{c.failure_count > 1 ? 's have' : ' has'} failed this case
+          </p>
+        )}
         <div className="flex items-center justify-between text-xs text-stone-500">
           <span>
-            {c.suspect_count} suspects · {difficultyLabel(c.difficulty)}
+            {c.suspect_count} suspects · {c.evidence_count} evidence ·{' '}
+            {difficultyLabel(c.difficulty)} ·{' '}
+            <span className="font-mono font-bold text-gold-400">+{c.reward_rs} RS</span>
           </span>
           <Link to={`/cases/${c.id}`} className="btn-gold px-3 py-1.5 text-sm">
             Open Case
@@ -46,31 +54,37 @@ function CaseCard({ c, priority }: { c: CaseSummary; priority: boolean }) {
   )
 }
 
+function DraftingCard() {
+  return (
+    <div className="flex min-h-44 flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-noir-700 p-4 text-center">
+      <FileText className="h-6 w-6 animate-pulse text-gold-500/60" />
+      <p className="font-display text-sm uppercase tracking-widest text-stone-500">
+        New case being drafted
+      </p>
+      <p className="text-xs text-stone-600">The commission is preparing a fresh file…</p>
+    </div>
+  )
+}
+
 export default function Dashboard() {
-  const [cases, setCases] = useState<CaseSummary[]>([])
+  const [docket, setDocket] = useState<CaseDocket | null>(null)
   const [me, setMe] = useState<UserProfile | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [generating, setGenerating] = useState(false)
-
-  const loadCases = () => api.listCases().then(setCases).catch((e) => setError(e.message))
+  const pollTimer = useRef<ReturnType<typeof setInterval>>(null)
 
   useEffect(() => {
-    loadCases()
+    const loadDocket = () => api.listCases().then(setDocket).catch((e) => setError(e.message))
+    loadDocket()
     api.getMe().then(setMe).catch(() => {})
+    // While the pool is below target, new cases appear as Gemini finishes them.
+    pollTimer.current = setInterval(loadDocket, POLL_INTERVAL_MS)
+    return () => {
+      if (pollTimer.current) clearInterval(pollTimer.current)
+    }
   }, [])
 
-  const generate = async () => {
-    setGenerating(true)
-    setError(null)
-    try {
-      await api.generateCase()
-      await loadCases()
-    } catch (e) {
-      setError((e as Error).message)
-    } finally {
-      setGenerating(false)
-    }
-  }
+  const cases = docket?.entries ?? []
+  const missing = docket ? Math.max(0, docket.pool_size - cases.length) : 0
 
   return (
     <div className="min-h-screen">
@@ -94,24 +108,21 @@ export default function Dashboard() {
         <div className="mb-6 flex items-center justify-between">
           <h2 className="section-title lamp-flicker">
             Case Docket
-            <span className="text-sm normal-case tracking-normal text-stone-500">
-              {cases.length} active
-            </span>
+            {docket && (
+              <span className="text-sm normal-case tracking-normal text-stone-500">
+                {cases.length} / {docket.pool_size} open
+              </span>
+            )}
           </h2>
-          <button onClick={generate} disabled={generating} className="btn-ghost flex items-center gap-2 text-sm">
-            <FilePlus className="h-4 w-4" />
-            {generating ? 'Generating… (10-30s)' : 'Generate Case'}
-          </button>
         </div>
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
-        {cases.length === 0 && !error && (
-          <div className="rounded-lg border border-dashed border-noir-700 py-10 text-center text-stone-500">
-            No cases on the board. Generate one to get started.
-          </div>
-        )}
+        {!docket && !error && <p className="py-10 text-center text-stone-500">Opening the docket…</p>}
         <div className="grid gap-4 sm:grid-cols-2">
           {cases.map((c, i) => (
             <CaseCard key={c.id} c={c} priority={i === 0} />
+          ))}
+          {Array.from({ length: missing }, (_, i) => (
+            <DraftingCard key={`drafting-${i}`} />
           ))}
         </div>
       </main>

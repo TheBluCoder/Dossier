@@ -1,6 +1,6 @@
 import type {
   CaseBriefing,
-  CaseSummary,
+  CaseDocket,
   Evidence,
   Investigation,
   Leaderboard,
@@ -41,12 +41,7 @@ export const api = {
   getProfile: () => request<ProfileWithHistory>('/api/profile'),
   getLeaderboard: () => request<Leaderboard>('/api/leaderboard'),
 
-  listCases: () => request<CaseSummary[]>('/api/cases'),
-  generateCase: (crime_type = 'murder') =>
-    request<CaseSummary>('/api/cases/generate', {
-      method: 'POST',
-      body: JSON.stringify({ crime_type }),
-    }),
+  listCases: () => request<CaseDocket>('/api/cases'),
   getCaseBriefing: (caseId: string) => request<CaseBriefing>(`/api/cases/${caseId}`),
 
   createInvestigation: (case_id: string) =>
