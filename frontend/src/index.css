@@ -1,66 +1,265 @@
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 @import 'tailwindcss';
 
 @theme {
-  --color-noir-950: #0c0a09;
-  --color-noir-900: #171412;
-  --color-noir-800: #221e1b;
-  --color-noir-700: #35302b;
-  --color-gold-400: #f5c542;
-  --color-gold-500: #d4a520;
-  --font-display: Georgia, 'Times New Roman', serif;
+  /* Paper / binder surfaces (was: near-black noir) */
+  --color-noir-950: #f7f0de;
+  /* page background — lightest paper */
+  --color-noir-900: #f2e8d5;
+  /* card / panel background — paper */
+  --color-noir-800: #e8daba;
+  /* active / selected surface — aged paper */
+  --color-noir-700: #c9b896;
+  /* borders — brass / binder edge */
+
+  /* Ink text scale — overrides Tailwind's built-in stone-* palette.
+     Nothing above 600 is used anywhere in the app, so this is safe to remap. */
+  --color-stone-50: #1b242e;
+  --color-stone-100: #26313f;
+  --color-stone-200: #33404e;
+  --color-stone-300: #47566a;
+  --color-stone-400: #5c6b7d;
+  --color-stone-500: #7c7159;
+  --color-stone-600: #948763;
+
+  /* Stamp-red accent — overrides gold-* (kept the name so nothing else needs edits) */
+  --color-gold-400: #b23a2e;
+  --color-gold-500: #8f2c22;
+
+  /* Type */
+  --font-display: 'Special Elite', 'Courier New', monospace;
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Courier New', monospace;
 }
 
 body {
   @apply bg-noir-950 text-stone-200 antialiased;
 }
 
+/* ── Core components ─────────────────────────────────────────────── */
+
 .panel {
-  @apply rounded-lg border border-noir-700 bg-noir-900 p-4;
+  @apply rounded-md border border-noir-700 bg-noir-900 p-4;
+  box-shadow: 0 2px 6px rgba(58, 52, 43, 0.12);
 }
 
 .btn-gold {
-  @apply rounded bg-gold-500 px-4 py-2 font-semibold text-noir-950 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-40;
+  @apply rounded-full bg-gold-500 px-5 py-2.5 font-semibold tracking-wide text-noir-950 transition hover:bg-gold-400 disabled:cursor-not-allowed disabled:opacity-40;
+}
+
+.btn-gold:hover {
+  box-shadow: 0 2px 10px rgba(178, 58, 46, 0.35);
 }
 
 .btn-ghost {
-  @apply rounded border border-noir-700 px-4 py-2 text-stone-300 transition hover:border-gold-500 hover:text-gold-400 disabled:opacity-40;
+  @apply rounded-full border border-noir-700 bg-transparent px-5 py-2.5 text-stone-300 transition hover:border-gold-500 hover:text-gold-500 disabled:opacity-40;
 }
 
 .input-noir {
-  @apply w-full rounded border border-noir-700 bg-noir-800 px-3 py-2 text-stone-200 placeholder-stone-500 outline-none focus:border-gold-500;
+  @apply w-full rounded-md border border-noir-700 bg-noir-950 px-3 py-2 text-stone-100 placeholder-stone-500 outline-none transition focus:border-gold-500 focus:ring-2 focus:ring-gold-400/20;
 }
-
-/* ── Noir effects (borrowed from the Detective K Vue app) ─────────── */
 
 .section-title {
-  @apply flex items-center gap-3 font-display text-lg uppercase tracking-widest text-stone-100;
+  @apply flex items-center gap-3 font-display text-lg text-stone-100;
 }
+
 .section-title::before {
   content: '';
-  @apply block h-6 w-1.5 bg-gold-500;
+  @apply block h-5 w-1.5 rounded-full bg-gold-400;
 }
 
+/* Subtle paper-emboss highlight — replaces the old neon glow */
 .text-glow {
-  text-shadow: 0 0 12px rgba(245, 197, 66, 0.45);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-@keyframes lamp-flicker {
-  0%, 92%, 96%, 100% { opacity: 1; }
-  93% { opacity: 0.75; }
-  95% { opacity: 0.9; }
+/* ── Signature elements ──────────────────────────────────────────── */
+
+/* Folder tabs — top nav reads like tabbed dividers in a case file */
+.folder-tab {
+  @apply relative -mb-[2px] shrink-0 rounded-t-lg border-2 border-b-0 border-noir-700 bg-noir-800 px-4 py-2 font-display text-xs text-stone-400 transition hover:bg-noir-900 hover:text-stone-200;
 }
+
+.folder-tab.is-active {
+  @apply bg-noir-950 text-gold-500;
+}
+
+/* Ring-binder holes down the left edge of a workspace */
+.ring-holes {
+  position: relative;
+}
+
+.ring-holes::before {
+  content: '';
+  position: absolute;
+  left: 1.1rem;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: repeating-linear-gradient(to bottom,
+      transparent 0,
+      transparent 26px,
+      var(--color-noir-700) 26px,
+      var(--color-noir-700) 28px);
+}
+
+/* A single ledger entry row — case docket, logbook lists */
+.ledger-row {
+  @apply flex flex-col gap-3 rounded-md border border-noir-700 bg-noir-900 p-4 sm:flex-row sm:items-center sm:justify-between;
+  box-shadow: 0 2px 6px rgba(58, 52, 43, 0.12);
+}
+
+/* Small stamped pill — crime type, priority, tier tags */
+.stamp-badge {
+  @apply rounded-full border border-gold-500/40 bg-gold-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-gold-500;
+}
+
+/* One-shot "ink stamp" pop-in — replaces the old infinite lamp flicker */
+@keyframes stamp-in {
+  0% {
+    opacity: 0;
+    transform: scale(1.4) rotate(-8deg);
+  }
+
+  60% {
+    opacity: 1;
+    transform: scale(0.95) rotate(2deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
 .lamp-flicker {
-  animation: lamp-flicker 6s infinite;
+  animation: stamp-in 0.4s ease-out;
 }
 
-/* Fixed film-grain overlay — pure CSS noise, no assets */
+/* Fixed overlay — now a faint paper-fiber texture instead of film grain */
 .film-grain {
   pointer-events: none;
   position: fixed;
   inset: 0;
   z-index: 50;
-  opacity: 0.05;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Worn-paper vignette — darkens toward the edges like an aged page.
+   Sits alongside .film-grain (same fixed-overlay technique), add both
+   divs in App.tsx, or merge into one div's box-shadow if you prefer. */
+.paper-worn {
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 49;
+  background: radial-gradient(ellipse at center,
+      transparent 55%,
+      rgba(58, 52, 43, 0.16) 85%,
+      rgba(58, 52, 43, 0.32) 100%);
+}
+
+/* Same worn-edge effect scoped to a single card instead of the whole page —
+   add className="panel edge-worn" (or ledger-row edge-worn) for foxed corners
+   on individual pieces of paper rather than the whole viewport. */
+.edge-worn {
+  position: relative;
+}
+
+.edge-worn::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: inset 0 0 18px rgba(58, 52, 43, 0.25);
+}
+
+/* ── Folder shell — wraps the whole app in a manila case-file folder ──── */
+
+.desk {
+  min-height: 100vh;
+  background: #2b2620;
+  padding: 2.5rem 1.25rem;
+}
+
+@media (max-width: 640px) {
+  .desk {
+    padding: 0;
+    background: var(--color-noir-950);
+  }
+}
+
+.folder-shell {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  border-radius: 4px 18px 18px 18px;
+  background: var(--color-noir-800);
+  padding: 0.5rem 0.5rem 0;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 640px) {
+  .folder-shell {
+    border-radius: 0;
+    box-shadow: none;
+    padding: 0;
+  }
+}
+
+/* The nav itself, docked at the top edge of the folder — these ARE the
+   folder's cut tabs, not a decorative label. The active tab's background
+   matches .folder-page so it visually fuses with the paper below it. */
+.folder-tabs {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .folder-tabs {
+    padding: 0.5rem 0.5rem 0;
+  }
+}
+
+.folder-page {
+  position: relative;
+  background: var(--color-noir-950);
+  border-radius: 2px 14px 14px 14px;
+  overflow: hidden;
+  min-height: calc(100vh - 7rem);
+}
+
+@media (max-width: 640px) {
+  .folder-page {
+    border-radius: 0;
+    min-height: 100vh;
+  }
+}
+
+/* Torn edge utility (currently unused by default — the fake "Case Files"
+   tab that used this was removed in favor of real folder tabs, see
+   App.tsx FolderTabs). Kept here in case you want a torn edge somewhere
+   else, e.g. the top of a panel. Give an element className="torn-top"
+   and make sure it (or an ancestor) already sets position: relative —
+   this class intentionally does NOT set position itself anymore, since
+   combining it with another class that also sets position caused the
+   exact zigzag-across-the-whole-page bug we just fixed. */
+.torn-top::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: inherit;
+  clip-path: polygon(0% 100%, 3% 30%, 7% 100%, 11% 45%, 15% 100%, 19% 20%, 23% 100%,
+      27% 55%, 31% 100%, 35% 15%, 39% 100%, 43% 40%, 47% 100%, 51% 60%,
+      55% 100%, 59% 25%, 63% 100%, 67% 50%, 71% 100%, 75% 10%, 79% 100%,
+      83% 35%, 87% 100%, 91% 45%, 95% 100%, 100% 20%, 100% 0%, 0% 0%);
 }
 
 ::selection {
