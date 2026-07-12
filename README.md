@@ -5,7 +5,23 @@ commission dashboard, review evidence, interrogate Gemini-powered suspects by
 text or voice, and submit a final accusation.
 
 **Stack:** React + TypeScript + Vite + Tailwind v4 · FastAPI (Python 3.12) ·
-MongoDB · Gemini API · ElevenLabs
+MongoDB · Gemini API · ElevenLabs · Clerk (Google Sign-In)
+
+## Features
+
+- **Commission dashboard** — case docket with AI-generated mysteries, your
+  reputation, tier, and solve stats
+- **Investigation workspace** — suspects, evidence viewer, auto-saved notes
+- **Interrogation room** — free-form questioning of independent AI suspect
+  agents (streamed replies, emotional cues, trust/patience meters), evidence
+  presentation, voice input, and ElevenLabs voice replies
+- **Verdict & resolution** — accuse a suspect, earn or lose reputation, and
+  see the full case reconstruction
+- **Progression** — reputation score with detective tiers
+  (Rookie → Inspector → Senior → Master → Legend), global leaderboard, and
+  player profiles with case history
+- **Versus (coming soon)** — multiplayer lobby is visible but locked for the
+  hackathon build
 
 ## Quick start (Docker)
 
@@ -22,7 +38,10 @@ docker compose up --build
 
 On first boot the backend seeds one handcrafted demo case, so the game is
 browsable immediately without API keys. Suspect replies need `GEMINI_API_KEY`;
-voice playback needs `ELEVENLABS_API_KEY`.
+voice playback needs `ELEVENLABS_API_KEY`. Hands-free Voice Dialog also needs
+`PUBLIC_BACKEND_URL` set to a public HTTPS URL that forwards to the backend (for
+example, an ngrok tunnel to port 8000). ElevenLabs connects back to
+`/api/audio/speech-engine/ws` over WSS; no API key is exposed to the browser.
 
 Auth defaults to **dev bypass** (`DEV_AUTH_BYPASS=true`) — the frontend shows a
 "Continue as Guest" button. Set Clerk keys in `.env` to enable Google Sign-In.
@@ -47,5 +66,9 @@ cd frontend && pnpm install && pnpm dev
 - Merge into `dev` when approved, delete the feature branch
 - `dev` is promoted to `main` after review
 
-See [CLAUDE.md](CLAUDE.md) for architecture, conventions, and current status.
-Game design: [docs/GDD.md](docs/GDD.md).
+## Documentation
+
+- [docs/GDD.md](docs/GDD.md) — game design document: gameplay, screens, API
+  surface, build priorities, and what's explicitly out of scope
+- [CLAUDE.md](CLAUDE.md) — architecture, conventions, game mechanics
+  (reputation/tiers, trust/patience), current status, and agent guidance

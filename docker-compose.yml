@@ -1,0 +1,63 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: investigator-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 })"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: investigator-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      # Falls back to the local mongo container when MONGODB_URI isn't set in
+      # .env (e.g. an Atlas mongodb+srv:// URI) — .env's own MONGODB_URI was
+      # previously always overridden by this block regardless of its value.
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017}
+      CORS_ORIGINS: http://localhost:5173
+    volumes:
+      - ./backend/app:/code/app
+      - ./backend/scripts:/code/scripts
+      - backend-media:/code/media
+    depends_on:
+      mongo:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    container_name: investigator-frontend
+    ports:
+      - "5173:5173"
+    environment:
+      # Clerk publishable key intentionally NOT passed here — it lives in
+      # frontend/.env.local (managed by `clerk env pull`, volume-mounted).
+      VITE_API_URL: http://localhost:8000
+      # Keep pnpm's store off the (slow, OneDrive-synced) bind mount.
+      NPM_CONFIG_STORE_DIR: /pnpm-store
+    volumes:
+      - ./frontend:/code
+      - frontend-modules:/code/node_modules
+      - pnpm-store:/pnpm-store
+    depends_on:
+      - backend
+    # Install inside the container (host node_modules can't be reused across
+    # the volume mount on Windows). CI=1 keeps pnpm non-interactive; the named
+    # volume caches the install so later startups take seconds.
+    command: sh -c "CI=1 pnpm install && pnpm dev"
+
+volumes:
+  mongo-data:
+  backend-media:
+  frontend-modules:
+  pnpm-store:

@@ -1,0 +1,111 @@
+@import 'tailwindcss';
+@theme { --color-noir-950:#090807; --color-noir-900:#12100e; --color-noir-800:#1c1814; --color-noir-700:#40372d; --color-gold-400:#d8c39d; --color-gold-500:#8d1718; --font-display:'Bodoni 72 Smallcaps','Baskerville',Georgia,serif; }
+:root { color-scheme:dark; font-family:'Courier New',Courier,monospace; background:#090807; }
+* { box-sizing:border-box; }
+body { @apply m-0 min-w-80 bg-noir-950 text-stone-300 antialiased; background-image:radial-gradient(circle at 50% -15%,rgba(116,31,25,.2),transparent 34rem),linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.008) 1px,transparent 1px); background-size:auto,4px 4px,4px 4px; }
+body::before { content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.74) 100%); }
+button,a,input,textarea,select { font:inherit; }
+/* Reusable "component" classes live in an explicit layer, lower priority than
+   Tailwind's utilities layer — so a utility class appended alongside one of
+   these (e.g. `panel border-gold-500`) actually overrides it, regardless of
+   class order in the JSX. Without this, unlayered custom CSS always beats
+   layered utilities no matter what, and conditional selection/active styles
+   silently never render (see: Accusation.tsx suspect selection). */
+@layer components {
+.panel { @apply relative border border-noir-700 bg-noir-900 p-4; border-radius:2px;background-image:linear-gradient(135deg,rgba(216,195,157,.035),transparent 55%);box-shadow:0 18px 45px rgba(0,0,0,.28),inset 0 0 28px rgba(0,0,0,.22); }
+.panel::after { content:'';position:absolute;inset:5px;border:1px solid rgba(216,195,157,.045);pointer-events:none; }
+.btn-gold { @apply relative border border-red-950 bg-gold-500 px-4 py-2 font-bold uppercase tracking-wider text-stone-100 transition disabled:cursor-not-allowed disabled:opacity-40; border-radius:1px;box-shadow:inset 0 1px rgba(255,255,255,.08),0 5px 20px rgba(80,0,0,.22); }
+.btn-gold:hover { background:#a82223;transform:translateY(-1px); }
+.btn-ghost { @apply border border-noir-700 px-4 py-2 uppercase tracking-wider text-stone-400 transition hover:border-gold-500 hover:text-gold-400 disabled:opacity-40; border-radius:1px;background:rgba(10,8,7,.45); }
+.input-noir { @apply w-full border border-noir-700 bg-noir-800 px-3 py-2 text-stone-200 placeholder-stone-600 outline-none focus:border-gold-500; border-radius:1px;box-shadow:inset 0 4px 15px rgba(0,0,0,.3); }
+.section-title { @apply flex items-center gap-3 font-display text-xl uppercase tracking-[0.22em] text-stone-100; }
+.section-title::before { content:'';@apply block h-7 w-1.5 bg-gold-500;box-shadow:6px 2px 0 rgba(96,13,14,.45),2px -3px 0 rgba(96,13,14,.25);transform:rotate(-3deg); }
+.text-glow { text-shadow:0 0 15px rgba(141,23,24,.75); }
+.case-stamp { display:inline-block;border:2px solid rgba(141,23,24,.72);color:#a83a36;padding:.2rem .55rem;font-size:.65rem;font-weight:900;letter-spacing:.18em;text-transform:uppercase;transform:rotate(-3deg); }
+.blood-rule { height:2px;background:linear-gradient(90deg,#8d1718,rgba(141,23,24,.15) 72%,transparent);box-shadow:13px 3px 0 -1px rgba(141,23,24,.4); }
+.case-folder { position:relative;margin-top:1.25rem;color:#241a12;filter:drop-shadow(10px 14px 13px rgba(0,0,0,.55));transition:transform .3s ease,filter .3s ease; }
+.case-folder:hover { transform:translateY(-5px) rotate(.35deg);filter:drop-shadow(14px 20px 16px rgba(0,0,0,.68)); }
+.case-folder-tab { position:absolute;left:0;top:-1.2rem;width:42%;height:1.45rem;border:1px solid #66533a;border-bottom:0;border-radius:7px 13px 0 0;background:#9b8157;color:#312217;padding:.3rem .75rem 0;font-size:.58rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase; }
+.case-folder-body { position:relative;overflow:hidden;min-height:16rem;border:1px solid #66533a;border-radius:0 5px 5px 5px;padding:1.3rem;background-color:#a88e62;background-image:radial-gradient(circle at 87% 88%,transparent 0 28px,rgba(70,42,21,.12) 29px 33px,transparent 34px),repeating-linear-gradient(96deg,rgba(255,255,255,.025) 0 1px,rgba(55,35,20,.022) 1px 3px),linear-gradient(145deg,rgba(255,239,190,.18),transparent 46%,rgba(57,34,19,.12));box-shadow:inset 0 1px rgba(255,255,255,.18),inset 0 -15px 28px rgba(66,39,19,.13); }
+.case-folder-body::before { content:'';position:absolute;inset:0;opacity:.22;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='p'%3E%3CfeTurbulence baseFrequency='.45' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.32'/%3E%3C/svg%3E");pointer-events:none; }
+.case-folder-body::after { content:'';position:absolute;width:52px;height:70px;right:14px;bottom:-15px;border:2px solid rgba(56,35,19,.11);border-radius:48% 52% 45% 55%;transform:rotate(14deg);box-shadow:inset 0 0 0 5px rgba(56,35,19,.025),inset 0 0 0 9px rgba(56,35,19,.035);pointer-events:none; }
+.case-folder-priority .case-folder-tab,.case-folder-priority .case-folder-body { background-color:#b0925c;border-color:#7d5d35; }
+/* Smaller dossier card for the dashboard's active-investigations rail —
+   same folder look as the docket, trimmed down since it only needs a
+   title + resume link, not the full case summary. */
+.case-folder-compact { margin-top:1rem; }
+.case-folder-compact .case-folder-tab { width:62%; }
+.case-folder-compact .case-folder-body { min-height:auto;padding:1rem; }
+.folder-stamp { border:3px double rgba(113,12,13,.72);color:rgba(113,12,13,.82);padding:.28rem .45rem;font-family:Georgia,serif;font-size:.63rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;transform:rotate(-7deg); }
+@keyframes lamp-flicker { 0%,91%,95%,100%{opacity:1} 92%{opacity:.58} 93%{opacity:.92} }
+.lamp-flicker { animation:lamp-flicker 8s infinite; }
+@keyframes voice-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.035)} }
+.voice-orb { position:relative;display:flex;align-items:center;justify-content:center;width:260px;height:260px;border-radius:9999px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#5c554b,#1a1712 72%);transition:box-shadow .45s ease,filter .45s ease; }
+.voice-orb img { width:100%;height:100%;object-fit:cover; }
+.voice-orb span { font-family:'Bodoni 72 Smallcaps',Georgia,serif;font-size:4.5rem;color:#c8b996; }
+.voice-orb-speaking { box-shadow:0 0 0 5px rgba(34,197,94,.9),0 0 60px 12px rgba(34,197,94,.34);animation:voice-pulse 1.5s ease-in-out infinite;filter:none; }
+.voice-orb-speaking img { filter:none; }
+.voice-orb-quiet { box-shadow:0 0 0 5px rgba(120,113,108,.5);filter:grayscale(.55) brightness(.72); }
+.film-grain { pointer-events:none;position:fixed;inset:0;z-index:50;opacity:.085;mix-blend-mode:screen;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E"); }
+header { background:rgba(9,8,7,.82);backdrop-filter:blur(10px); }
+.detective-id { display:flex;align-items:center;gap:.65rem;border-left:1px solid #40372d;padding:.2rem .7rem .2rem .8rem;transition:background .2s ease,border-color .2s ease; }
+.detective-id:hover { border-left-color:#8d1718;background:rgba(141,23,24,.07); }
+.detective-id-photo { display:grid;width:34px;height:40px;place-items:center;overflow:hidden;border:1px solid #6a5948;background:#1c1814;color:#9d8c72;box-shadow:inset 0 0 10px #090807;transform:rotate(-1deg); }
+.detective-id-photo img { width:100%;height:100%;object-fit:cover;filter:grayscale(.65) sepia(.35) contrast(1.08); }
+/* Folder-tab navigation — the nav reads like the cut tabs of a case file.
+   The active tab shares the page background so it looks cut open into the
+   dossier below it, with a blood-red index mark along the top. */
+.folder-tabs { display:flex;align-items:flex-end;gap:.3rem;overflow-x:auto;scrollbar-width:none; }
+.folder-tabs::-webkit-scrollbar { display:none; }
+.folder-tab { position:relative;flex-shrink:0;margin-bottom:-2px;border:2px solid #40372d;border-bottom:0;border-radius:9px 10px 0 0;background:#1a1613;padding:.5rem 1.15rem;font-family:var(--font-display);font-size:.72rem;text-transform:uppercase;letter-spacing:.16em;color:#8f8471;white-space:nowrap;transition:background .2s ease,color .2s ease; }
+.folder-tab:hover { background:#12100e;color:#d8c39d; }
+.folder-tab.is-active { background:#090807;color:#e4d3ab; }
+.folder-tab.is-active::before { content:'';position:absolute;left:-2px;right:-2px;top:-2px;height:3px;background:#8d1718; }
+.archive-page { position:relative;min-height:100vh; }
+.archive-page::before,.archive-page::after { content:'';position:fixed;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(1px); }
+.archive-page::before { width:280px;height:280px;left:-120px;top:28%;border:28px solid rgba(77,42,23,.055); }
+.archive-page::after { width:9px;height:9px;right:8%;top:21%;background:rgba(116,15,16,.3);box-shadow:18px 7px 0 -2px rgba(116,15,16,.18),-11px 22px 0 -3px rgba(116,15,16,.22),31px 28px 0 -3px rgba(116,15,16,.13); }
+.archive-sheet { position:relative; }
+.archive-sheet::before { content:'COMMISSION ARCHIVE';display:block;grid-column:1/-1;margin-bottom:1.4rem;border-bottom:1px solid #40372d;padding-bottom:.55rem;color:#665e55;font-size:.58rem;font-weight:700;letter-spacing:.38em;text-align:right; }
+.archive-page .panel { border-radius:0;border-color:#40372d;background-color:rgba(18,16,14,.92); }
+.archive-page .panel > h3,.archive-page section > h3 { font-family:'Courier New',monospace;letter-spacing:.22em; }
+.archive-page textarea { background-image:repeating-linear-gradient(transparent 0,transparent 27px,rgba(216,195,157,.055) 28px);line-height:28px; }
+.archive-page input[type='checkbox'] { appearance:none;width:14px;height:14px;border:1px solid #756653;background:#15120f; }
+.archive-page input[type='checkbox']:checked { background:#8d1718;box-shadow:inset 0 0 0 3px #15120f; }
+.archive-page video { filter:sepia(.38) contrast(1.1) brightness(.8); }
+.paper-ledger { background-color:#a88e62!important;color:#2c2017!important;border-color:#6d583d!important;background-image:repeating-linear-gradient(transparent 0,transparent 35px,rgba(67,45,27,.13) 36px)!important;box-shadow:9px 12px 25px rgba(0,0,0,.5)!important; }
+.paper-ledger * { color:inherit; }
+.period-rule { display:flex;align-items:center;gap:.75rem; }
+.period-rule::before,.period-rule::after { content:'✦';color:#6e1112;font-size:.55rem; }
+.suspect-paper { position:relative;display:flex;gap:1rem;min-height:154px;padding:1rem;background:#a98f64;color:#2d2016;border:1px solid #725c40;box-shadow:7px 9px 18px rgba(0,0,0,.48),inset 0 0 24px rgba(66,39,19,.12);background-image:repeating-linear-gradient(92deg,rgba(255,255,255,.025) 0 1px,rgba(55,35,20,.02) 1px 3px);transition:transform .25s ease,box-shadow .25s ease; }
+.suspect-paper:nth-of-type(even) { transform:rotate(.5deg); }
+.suspect-paper:hover,.suspect-paper:focus-visible { transform:translateY(-3px) rotate(-.35deg);box-shadow:10px 14px 23px rgba(0,0,0,.62);outline:1px solid #8d1718; }
+.suspect-paper-clip { position:absolute;right:18px;top:-7px;width:13px;height:31px;border:2px solid rgba(70,64,57,.7);border-radius:8px;transform:rotate(7deg);z-index:3; }
+.suspect-photo { display:flex;position:relative;width:88px;min-width:88px;height:112px;flex-direction:column;align-items:center;justify-content:center;border:7px solid #d2c19d;background:radial-gradient(circle at 50% 35%,#5c554b,#292723 70%);box-shadow:2px 4px 8px rgba(34,23,15,.4);transform:rotate(-2deg);filter:sepia(.45); }
+.suspect-photo span { font-family:Georgia,serif;font-size:1.8rem;color:#c8b996; }
+.suspect-photo img { width:100%;height:100%;object-fit:cover;filter:grayscale(.45) sepia(.42) contrast(1.08); }
+.suspect-photo small { position:absolute;bottom:5px;color:#d7c8aa;font-size:6px;letter-spacing:.08em;text-transform:uppercase; }
+.suspect-photo-large { width:170px;height:218px; }
+.suspect-photo-large span { font-size:3.5rem; }
+.dossier-backdrop { position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:1.25rem;background:rgba(3,2,2,.82);backdrop-filter:blur(5px); }
+.dossier-dialog { position:relative;width:min(820px,100%);max-height:90vh;overflow-y:auto;padding:2rem;background:#ad9368;color:#302117;border:1px solid #6b5438;box-shadow:0 30px 90px #000, inset 0 0 55px rgba(77,43,20,.16);background-image:repeating-linear-gradient(0deg,transparent 0,transparent 31px,rgba(75,51,32,.07) 32px); }
+.dossier-dialog::before { content:'';position:absolute;inset:8px;border:1px solid rgba(75,51,32,.2);pointer-events:none; }
+.dossier-dialog dt { margin-bottom:.25rem;font-size:.58rem;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:#741718; }
+.dossier-dialog dd { font-family:Georgia,serif;line-height:1.55;color:#39271b; }
+.case-journal { position:relative;border-left:1px solid #40372d;padding-left:1.25rem; }
+@media (max-width:1023px) { .case-journal { border-left:0;border-top:1px solid #40372d;padding-left:0;padding-top:1.5rem; } }
+.briefing-cover { display:flex;align-items:flex-start;justify-content:space-between;gap:2rem;padding:2rem;background:#aa9065;border:1px solid #6f593e;box-shadow:10px 14px 30px rgba(0,0,0,.48),inset 0 0 35px rgba(73,43,22,.14);background-image:repeating-linear-gradient(93deg,rgba(255,255,255,.02) 0 1px,rgba(54,35,21,.018) 1px 3px); }
+.briefing-entry { padding:1.5rem;background:rgba(18,16,14,.94); }
+@media (max-width:640px) { .briefing-cover { flex-direction:column;padding:1.25rem; } }
+}
+::selection { background:#8d1718;color:#f1e8d5; }
+::-webkit-scrollbar { width:9px;height:9px; } ::-webkit-scrollbar-track { background:#090807; } ::-webkit-scrollbar-thumb { background:#40372d;border:2px solid #090807; }
+.dashboard-column-scroll { scrollbar-gutter:stable;overscroll-behavior:contain; }
+.dashboard-column-scroll::-webkit-scrollbar-thumb { background:#6d1717;border-color:#12100e; }
+
+/* Keep the fixed left desk rail comfortable on common 16-inch laptop heights. */
+@media (min-width:1280px) and (max-height:900px) {
+  .dashboard-left-rail { font-size:.94rem; }
+}
+@media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important; } }
+@media (max-width:640px) { .case-folder-body { min-height:auto; } }

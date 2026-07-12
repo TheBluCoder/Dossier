@@ -1,0 +1,195 @@
+{
+  "title": "The Gallery After Hours",
+  "crime_type": "murder",
+  "difficulty": 4,
+  "summary": "Art dealer Marcus Hale was found dead in his gallery office on a Friday night. The front door shows no forced entry, three people had reasons to be in the building — and all three are lying about something.",
+  "status": "available",
+  "victim": {
+    "name": "Marcus Hale",
+    "age": 52,
+    "occupation": "Owner of Hale Gallery",
+    "background": "A charming but ruthless art dealer who built his gallery from nothing. Known for making enemies as easily as sales. Recently he had grown withdrawn, spending late nights alone with the gallery's account books and telling friends he 'needed to fix something before Monday'."
+  },
+  "crime_scene": {
+    "location": "Second-floor office, Hale Gallery",
+    "time": "Friday, between 20:45 and 21:15",
+    "description": "Marcus Hale was found at his desk, struck from behind with a heavy object. A bronze statuette normally displayed on his shelf is missing. The office shows no sign of a break-in, and his laptop was left open on a spreadsheet. The night guard discovered the body during his 22:00 round."
+  },
+  "public_timeline": [
+    { "time": "18:30", "event": "Marcus texts his lawyer asking to meet before Monday." },
+    { "time": "19:30", "event": "Gallery closes; staff badge out through the front door." },
+    { "time": "20:45-21:15", "event": "Estimated time of death (coroner)." },
+    { "time": "22:00", "event": "Night guard finds the body and calls the police." }
+  ],
+  "canonical_timeline": [
+    { "time": "19:32", "event": "Elena badges out with the rest of the staff." },
+    { "time": "19:55", "event": "Julian calls Marcus; Marcus tells him the embezzlement goes to the board on Monday." },
+    { "time": "20:02", "event": "Dana enters to confront Marcus about ending their affair." },
+    { "time": "20:15", "event": "Elena re-enters to shred forged provenance documents in the archive room." },
+    { "time": "20:26", "event": "Julian pays his dinner bill early and drives to the gallery." },
+    { "time": "20:38", "event": "Elena leaves, unseen by Dana or Marcus." },
+    { "time": "20:41", "event": "Dana leaves; Marcus is alive and on another call." },
+    { "time": "20:47", "event": "Julian enters through the loading dock and disables the alarm." },
+    { "time": "20:55", "event": "The argument escalates; Julian strikes Marcus with the bronze statuette." },
+    { "time": "21:05", "event": "Julian leaves with the statuette and dumps it in the river." }
+  ],
+  "suspects": [
+    {
+      "id": "s1",
+      "name": "Elena Vasquez",
+      "age": 34,
+      "occupation": "Assistant curator, Hale Gallery",
+      "relationship": "Employee of the victim for six years",
+      "background": "Meticulous, ambitious, and underpaid. Marcus trusted her with authentication paperwork and little else. Colleagues describe her as the person who actually runs the gallery.",
+      "alibi": "Claims she left with the other staff at 19:30 and went straight home.",
+      "personality": "Precise and composed, but visibly rattled when paperwork is mentioned. Answers questions like she is proofreading them first.",
+      "voice_id": "21m00Tcm4TlvDq8ikWAM",
+      "private": {
+        "is_culprit": false,
+        "secret": "She has been forging provenance documents for a painting Marcus sold last month, and returned at 20:15 to shred the drafts before an upcoming audit.",
+        "objective": "Keep the forgery hidden at all costs — prison scares her more than suspicion of murder.",
+        "motive": null,
+        "known_facts": [
+          "She re-entered the gallery at 20:15 and left at 20:38, using her badge at the front door.",
+          "While shredding documents in the archive room she heard a woman's voice upstairs — agitated.",
+          "She knows Dana Whitfield has been having an affair with Marcus; she saw them together after hours a month ago.",
+          "She knows the bronze statuette on Marcus's shelf — it was heavy, a gift from Julian years ago."
+        ],
+        "unknown_facts": [
+          "She does not know who killed Marcus.",
+          "She does not know about Julian's embezzlement or his 19:55 phone call.",
+          "She never saw or heard anyone at the loading dock."
+        ],
+        "knows_about_others": [
+          { "suspect_id": "s3", "knowledge": "Dana and Marcus were having an affair; she saw them embracing in the office a month ago." }
+        ]
+      }
+    },
+    {
+      "id": "s2",
+      "name": "Julian Cross",
+      "age": 48,
+      "occupation": "Business partner and co-founder of Hale Gallery",
+      "relationship": "Business partner of the victim for twenty years",
+      "background": "The financial half of the partnership. Polished, gregarious, and drowning in personal debt no one at the gallery knows about. He and Marcus built the business together, but lately their meetings ended behind closed doors.",
+      "alibi": "Claims he was at dinner at Bellini's across town until well past 21:30.",
+      "personality": "Smooth and expansive, a handshake for everyone. Turns cold and precise when the gallery's finances come up.",
+      "voice_id": "pNInz6obpgDQGcFmaJgB",
+      "private": {
+        "is_culprit": true,
+        "secret": "He has been embezzling from the gallery for three years to cover gambling debts.",
+        "objective": "Walk out of this interrogation without the finances ever being examined.",
+        "motive": "Marcus discovered the embezzlement and told him at 19:55 that he was presenting it to the board and the police on Monday.",
+        "known_facts": [
+          "He called Marcus at 19:55; Marcus refused to negotiate.",
+          "He paid his dinner bill at 20:26 and drove to the gallery — about fifteen minutes away.",
+          "He entered through the loading dock at 20:47 using his owner's key and disabled the alarm.",
+          "He struck Marcus with the bronze statuette — his own gift — and took it with him.",
+          "He knows Elena has been staying late with authentication paperwork and shredding documents; he suspects she is hiding something."
+        ],
+        "unknown_facts": [
+          "He does not know Dana was in the building minutes before him.",
+          "He does not know the night guard saw his grey sedan by the loading dock.",
+          "He does not know Marcus already texted his lawyer at 18:30."
+        ],
+        "knows_about_others": [
+          { "suspect_id": "s1", "knowledge": "Elena has been working oddly late and shredding paperwork; he suspects she is hiding something with the authentications." }
+        ]
+      }
+    },
+    {
+      "id": "s3",
+      "name": "Dana Whitfield",
+      "age": 29,
+      "occupation": "Painter; the gallery's current headline exhibitor",
+      "relationship": "Exhibiting artist — and secretly the victim's lover",
+      "background": "A rising star whose first major show is hanging in Hale Gallery right now. Emotional, direct, and terrified that scandal will end her career before it starts.",
+      "alibi": "Claims she was at her studio all evening preparing canvases.",
+      "personality": "Wears her feelings openly — grief, anger, and guilt fight over her face. Snaps when she feels cornered, apologizes right after.",
+      "voice_id": "AZnzlk1XvdvUeBnXmlld",
+      "private": {
+        "is_culprit": false,
+        "secret": "She was having an affair with Marcus. She came to the gallery at 20:02 to confront him because he ended it by text that morning.",
+        "objective": "Keep the affair out of the record — her show, her reputation, and Marcus's widow are all on the line.",
+        "motive": null,
+        "known_facts": [
+          "She was in Marcus's office from about 20:05 to 20:40, arguing about the breakup.",
+          "When she left at 20:41, Marcus was ALIVE — he took a phone call and waved her out.",
+          "Earlier, at around 20:00 as she arrived, Marcus was finishing an angry call about money — she heard him say 'the board sees everything Monday'.",
+          "On her way out she noticed the loading dock door was closed but the alarm panel light was green (disarmed)."
+        ],
+        "unknown_facts": [
+          "She does not know who Marcus was arguing with on the phone.",
+          "She does not know about Elena's forgeries or that Elena was in the building.",
+          "She does not know who killed Marcus."
+        ],
+        "knows_about_others": [
+          { "suspect_id": "s2", "knowledge": "Marcus once told her, after wine, that 'Julian's numbers never add up twice the same way'." }
+        ]
+      }
+    }
+  ],
+  "evidence": [
+    {
+      "id": "e1",
+      "title": "Crime Scene Report",
+      "type": "report",
+      "description": "Victim struck once from behind with a heavy blunt object, time of death 20:45-21:15. A bronze statuette (approx. 4 kg) is missing from the office shelf. No forced entry at the front door. The victim's laptop was open to the gallery's accounting spreadsheet.",
+      "timestamp": "Friday 22:40",
+      "related_suspects": [],
+      "canonical_facts": []
+    },
+    {
+      "id": "e2",
+      "title": "Front Door Badge Log",
+      "type": "security_log",
+      "description": "19:32 — E. Vasquez badge OUT. 20:02 — D. Whitfield badge IN (guest pass). 20:15 — E. Vasquez badge IN. 20:38 — E. Vasquez badge OUT. 20:41 — D. Whitfield badge OUT. Separate system note: loading dock alarm DISARMED 20:47, re-armed never; dock door has no badge reader.",
+      "timestamp": "Friday, full day",
+      "related_suspects": ["s1", "s3"],
+      "canonical_facts": []
+    },
+    {
+      "id": "e3",
+      "title": "Bellini's Restaurant Receipt",
+      "type": "receipt",
+      "description": "Dinner for one, table 9. Card payment authorized at 20:26. Bellini's is a fifteen-minute drive from the gallery. The reservation had been made for two.",
+      "timestamp": "Friday 20:26",
+      "related_suspects": ["s2"],
+      "canonical_facts": []
+    },
+    {
+      "id": "e4",
+      "title": "Victim's Phone Records",
+      "type": "phone_record",
+      "description": "18:30 — outgoing text to his lawyer: 'Need to see you before Monday. It's about the accounts. It can't wait.' 19:55 — incoming call, 4 minutes, from a number saved as 'JC'. 20:41 — outgoing call to the gallery's insurance broker, 2 minutes.",
+      "timestamp": "Friday evening",
+      "related_suspects": ["s2"],
+      "canonical_facts": []
+    },
+    {
+      "id": "e5",
+      "title": "Night Guard Statement",
+      "type": "witness_statement",
+      "description": "\"I do the rounds at ten. Around five to nine I was smoking by the side lot and heard two men going at it upstairs — real anger, short bursts. There was a grey sedan backed up against the loading dock. I figured it was a late delivery. By my ten o'clock round the car was gone and Mr. Hale was on the floor.\"",
+      "timestamp": "Friday 23:05",
+      "related_suspects": ["s2"],
+      "canonical_facts": []
+    }
+  ],
+  "solution": {
+    "culprit_id": "s2",
+    "motive": "Marcus discovered Julian had been embezzling gallery funds for years and was presenting the evidence to the board and police on Monday. Julian killed him to stop the disclosure.",
+    "explanation": "Marcus spent his final week auditing the accounts and texted his lawyer at 18:30 about 'the accounts'. At 19:55 he told Julian by phone that the board would see everything on Monday. Julian, at dinner across town, paid his bill at 20:26 — directly contradicting his claim of staying past 21:30 — drove fifteen minutes to the gallery, and let himself in through the loading dock at 20:47 with his owner's key, disarming the alarm. The night guard heard two men arguing just before 21:00 and saw a grey sedan at the dock. Julian struck Marcus with the bronze statuette he himself had gifted, took it, and disposed of it. Dana's testimony proves Marcus was alive at 20:41, and the badge log clears both women: Elena left at 20:38, Dana at 20:41 — before the dock was ever opened.",
+    "suspect_secrets": {
+      "s1": "Elena looked guilty because she sneaked back at 20:15 and shredded documents — but she was destroying forged provenance papers, not covering a murder.",
+      "s3": "Dana hid that she was in the building because admitting it meant exposing her affair with Marcus — yet her timeline is what proves the killer arrived after 20:41."
+    },
+    "key_clues": [
+      "The receipt shows Julian paid at 20:26 — his 'until 21:30' alibi is false.",
+      "The loading dock was disarmed at 20:47, after both women had badged out.",
+      "The guard heard two MALE voices and saw a grey sedan at the dock around 20:55.",
+      "The 19:55 call from 'JC' and the lawyer text tie the motive to the accounts.",
+      "Dana's account of the 20:41 insurance-broker call (confirmed by phone records) proves Marcus was alive when she left."
+    ]
+  }
+}
