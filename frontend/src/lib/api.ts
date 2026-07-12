@@ -12,7 +12,9 @@ import type {
   UserProfile,
 } from '../types'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+// Production uses the current Vercel origin so /api routes reach the backend
+// service through vercel.json. Local development calls FastAPI directly.
+const API_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8000' : '')
 
 // The auth provider registers how to fetch a bearer token (Clerk JWT or dev token).
 let tokenProvider: () => Promise<string | null> = async () => 'dev'
