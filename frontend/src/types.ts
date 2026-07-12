@@ -87,6 +87,10 @@ export interface Investigation {
   case?: CaseBriefing
 }
 
+export interface ActiveInvestigation extends Investigation {
+  case_summary: CaseSummary
+}
+
 export interface Delivery {
   pace: string
   hesitation: boolean
@@ -103,7 +107,9 @@ export interface Message {
   emotion: string
   emotion_intensity: number
   delivery: Delivery
+  trust_before: number
   trust_after: number
+  patience_before: number
   patience_after: number
   conversation_ended: boolean
   created_at: string

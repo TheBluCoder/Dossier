@@ -4,10 +4,11 @@ import { Link, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import SuspectPortrait from '../components/SuspectPortrait'
 import { useInvestigationStore } from '../store/investigationStore'
+import { conversationalTime } from '../lib/time'
 import type { Evidence, Suspect } from '../types'
 
 function EvidenceDetail({ item }: { item: Evidence }) {
-  return <div className="panel"><div className="mb-1 flex items-center justify-between"><h4 className="font-display text-lg text-gold-400">{item.title}</h4><span className="text-xs uppercase text-stone-600">{item.type}</span></div>{item.timestamp && <p className="mb-2 text-xs text-stone-500">{item.timestamp}</p>}<p className="whitespace-pre-wrap text-sm leading-6 text-stone-300">{item.description}</p>{item.media_url && <video src={item.media_url} controls className="mt-3 w-full border border-noir-700" />}</div>
+  return <div className="panel"><div className="mb-1 flex items-center justify-between"><h4 className="font-display text-lg text-gold-400">{item.title}</h4><span className="text-xs uppercase text-stone-600">{item.type}</span></div>{item.timestamp && <p className="mb-2 text-xs text-stone-500">{conversationalTime(item.timestamp)}</p>}<p className="whitespace-pre-wrap text-sm leading-6 text-stone-300">{conversationalTime(item.description)}</p>{item.media_url && <video src={item.media_url} controls className="mt-3 w-full border border-noir-700" />}</div>
 }
 
 function SuspectFile({ suspect, investigationId, onOpen }: { suspect: Suspect; investigationId: string; onOpen: () => void }) {

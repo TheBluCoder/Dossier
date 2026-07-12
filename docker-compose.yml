@@ -20,7 +20,10 @@ services:
     env_file:
       - .env
     environment:
-      MONGODB_URI: mongodb://mongo:27017
+      # Falls back to the local mongo container when MONGODB_URI isn't set in
+      # .env (e.g. an Atlas mongodb+srv:// URI) — .env's own MONGODB_URI was
+      # previously always overridden by this block regardless of its value.
+      MONGODB_URI: ${MONGODB_URI:-mongodb://mongo:27017}
       CORS_ORIGINS: http://localhost:5173
     volumes:
       - ./backend/app:/code/app

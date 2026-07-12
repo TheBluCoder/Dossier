@@ -7,11 +7,13 @@ from typing import Any
 
 from app.models.case import Case, Suspect
 from app.models.user import reputation_delta
+from app.services.voice import voice_for_suspect
 
 
 def public_suspect(suspect: Suspect) -> dict[str, Any]:
     data = suspect.model_dump()
     data.pop("private", None)
+    data["voice_id"] = voice_for_suspect(suspect)
     return data
 
 

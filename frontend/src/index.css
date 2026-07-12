@@ -5,6 +5,13 @@
 body { @apply m-0 min-w-80 bg-noir-950 text-stone-300 antialiased; background-image:radial-gradient(circle at 50% -15%,rgba(116,31,25,.2),transparent 34rem),linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.008) 1px,transparent 1px); background-size:auto,4px 4px,4px 4px; }
 body::before { content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(ellipse at center,transparent 35%,rgba(0,0,0,.74) 100%); }
 button,a,input,textarea,select { font:inherit; }
+/* Reusable "component" classes live in an explicit layer, lower priority than
+   Tailwind's utilities layer — so a utility class appended alongside one of
+   these (e.g. `panel border-gold-500`) actually overrides it, regardless of
+   class order in the JSX. Without this, unlayered custom CSS always beats
+   layered utilities no matter what, and conditional selection/active styles
+   silently never render (see: Accusation.tsx suspect selection). */
+@layer components {
 .panel { @apply relative border border-noir-700 bg-noir-900 p-4; border-radius:2px;background-image:linear-gradient(135deg,rgba(216,195,157,.035),transparent 55%);box-shadow:0 18px 45px rgba(0,0,0,.28),inset 0 0 28px rgba(0,0,0,.22); }
 .panel::after { content:'';position:absolute;inset:5px;border:1px solid rgba(216,195,157,.045);pointer-events:none; }
 .btn-gold { @apply relative border border-red-950 bg-gold-500 px-4 py-2 font-bold uppercase tracking-wider text-stone-100 transition disabled:cursor-not-allowed disabled:opacity-40; border-radius:1px;box-shadow:inset 0 1px rgba(255,255,255,.08),0 5px 20px rgba(80,0,0,.22); }
@@ -26,6 +33,13 @@ button,a,input,textarea,select { font:inherit; }
 .folder-stamp { border:3px double rgba(113,12,13,.72);color:rgba(113,12,13,.82);padding:.28rem .45rem;font-family:Georgia,serif;font-size:.63rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;transform:rotate(-7deg); }
 @keyframes lamp-flicker { 0%,91%,95%,100%{opacity:1} 92%{opacity:.58} 93%{opacity:.92} }
 .lamp-flicker { animation:lamp-flicker 8s infinite; }
+@keyframes voice-pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.035)} }
+.voice-orb { position:relative;display:flex;align-items:center;justify-content:center;width:260px;height:260px;border-radius:9999px;overflow:hidden;background:radial-gradient(circle at 50% 35%,#5c554b,#1a1712 72%);transition:box-shadow .45s ease,filter .45s ease; }
+.voice-orb img { width:100%;height:100%;object-fit:cover; }
+.voice-orb span { font-family:'Bodoni 72 Smallcaps',Georgia,serif;font-size:4.5rem;color:#c8b996; }
+.voice-orb-speaking { box-shadow:0 0 0 5px rgba(34,197,94,.9),0 0 60px 12px rgba(34,197,94,.34);animation:voice-pulse 1.5s ease-in-out infinite;filter:none; }
+.voice-orb-speaking img { filter:none; }
+.voice-orb-quiet { box-shadow:0 0 0 5px rgba(120,113,108,.5);filter:grayscale(.55) brightness(.72); }
 .film-grain { pointer-events:none;position:fixed;inset:0;z-index:50;opacity:.085;mix-blend-mode:screen;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.78' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E"); }
 header { background:rgba(9,8,7,.82);backdrop-filter:blur(10px); }
 .detective-id { display:flex;align-items:center;gap:.65rem;border-left:1px solid #40372d;padding:.2rem .7rem .2rem .8rem;transition:background .2s ease,border-color .2s ease; }
@@ -77,9 +91,15 @@ header { background:rgba(9,8,7,.82);backdrop-filter:blur(10px); }
 .briefing-cover { display:flex;align-items:flex-start;justify-content:space-between;gap:2rem;padding:2rem;background:#aa9065;border:1px solid #6f593e;box-shadow:10px 14px 30px rgba(0,0,0,.48),inset 0 0 35px rgba(73,43,22,.14);background-image:repeating-linear-gradient(93deg,rgba(255,255,255,.02) 0 1px,rgba(54,35,21,.018) 1px 3px); }
 .briefing-entry { padding:1.5rem;background:rgba(18,16,14,.94); }
 @media (max-width:640px) { .briefing-cover { flex-direction:column;padding:1.25rem; } }
+}
 ::selection { background:#8d1718;color:#f1e8d5; }
 ::-webkit-scrollbar { width:9px;height:9px; } ::-webkit-scrollbar-track { background:#090807; } ::-webkit-scrollbar-thumb { background:#40372d;border:2px solid #090807; }
-.dashboard-case-scroll { scrollbar-gutter:stable;overscroll-behavior:contain; }
-.dashboard-case-scroll::-webkit-scrollbar-thumb { background:#6d1717;border-color:#12100e; }
+.dashboard-column-scroll { scrollbar-gutter:stable;overscroll-behavior:contain; }
+.dashboard-column-scroll::-webkit-scrollbar-thumb { background:#6d1717;border-color:#12100e; }
+
+/* Keep the fixed left desk rail comfortable on common 16-inch laptop heights. */
+@media (min-width:1280px) and (max-height:900px) {
+  .dashboard-left-rail { font-size:.94rem; }
+}
 @media (prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important;animation-iteration-count:1!important; } }
 @media (max-width:640px) { .case-folder-body { min-height:auto; } }

@@ -11,7 +11,7 @@ import random
 
 from app.core.config import get_settings
 from app.core.db import get_db
-from app.services import gemini
+from app.services import gemini, images
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +28,19 @@ def is_generating() -> bool:
 
 async def available_count() -> int:
     return await get_db().cases.count_documents({"status": "available"})
+
+
+async def generation_exclusions() -> tuple[list[str], list[str]]:
+    """Return existing titles and names for prompt guidance without another AI call."""
+    titles: list[str] = []
+    names: list[str] = []
+    async for doc in get_db().cases.find({}, {"title": 1, "suspects.name": 1}):
+        if title := doc.get("title"):
+            titles.append(title)
+        names.extend(
+            suspect["name"] for suspect in doc.get("suspects", []) if suspect.get("name")
+        )
+    return titles, names
 
 
 async def ensure_case_pool() -> None:
@@ -51,7 +64,11 @@ async def ensure_case_pool() -> None:
                 crime_type = random.choice(CRIME_TYPES)
                 logger.info("Case pool at %s/%s — generating a %s case", count, settings.case_pool_size, crime_type)
                 try:
-                    case = await gemini.generate_case(crime_type)
+                    used_titles, used_names = await generation_exclusions()
+                    case = await gemini.generate_case(
+                        crime_type, used_titles=used_titles, used_names=used_names
+                    )
+                    await images.add_suspect_portraits(case)  # best-effort, never raises
                 except Exception:
                     failures += 1
                     logger.exception("Case generation failed (%s/%s)", failures, MAX_CONSECUTIVE_FAILURES)

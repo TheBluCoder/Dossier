@@ -1,34 +1,39 @@
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import SuspectPortrait from '../components/SuspectPortrait'
 import { api } from '../lib/api'
+import { conversationalTime } from '../lib/time'
 import type { CaseBriefing } from '../types'
 
 export default function Briefing() {
   const { caseId } = useParams<{ caseId: string }>()
   const navigate = useNavigate()
   const [briefing, setBriefing] = useState<CaseBriefing | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [beginError, setBeginError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
 
   useEffect(() => {
-    if (caseId) api.getCaseBriefing(caseId).then(setBriefing).catch((e) => setError(e.message))
+    if (caseId) api.getCaseBriefing(caseId).then(setBriefing).catch((e) => setLoadError(e.message))
   }, [caseId])
 
   const begin = async () => {
     if (!caseId) return
     setStarting(true)
+    setBeginError(null)
     try {
       const inv = await api.createInvestigation(caseId)
       navigate(`/investigations/${inv.id}`)
     } catch (e) {
-      setError((e as Error).message)
+      // Claim conflicts and the active-case cap are expected, not fatal — keep
+      // the briefing visible so the player can back out to the dashboard.
+      setBeginError((e as Error).message)
       setStarting(false)
     }
   }
 
-  if (error) return <div className="p-10 text-center text-red-400">{error}</div>
+  if (loadError) return <div className="p-10 text-center text-red-400">{loadError}</div>
   if (!briefing) return <div className="p-10 text-center text-stone-500">Opening case file…</div>
 
   return (
@@ -51,9 +56,9 @@ export default function Briefing() {
           <div className="briefing-entry">
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-stone-500">Crime Scene</h3>
             <p className="font-semibold text-stone-100">
-              {briefing.crime_scene.location} · {briefing.crime_scene.time}
+              {briefing.crime_scene.location} · {conversationalTime(briefing.crime_scene.time)}
             </p>
-            <p className="mt-2 text-sm text-stone-400">{briefing.crime_scene.description}</p>
+            <p className="mt-2 text-sm text-stone-400">{conversationalTime(briefing.crime_scene.description)}</p>
           </div>
         </section>
 
@@ -62,8 +67,8 @@ export default function Briefing() {
           <ul className="space-y-2">
             {briefing.public_timeline.map((t, i) => (
               <li key={i} className="flex gap-4 text-sm">
-                <span className="w-16 shrink-0 font-mono text-gold-400">{t.time}</span>
-                <span className="text-stone-300">{t.event}</span>
+                <span className="w-20 shrink-0 font-mono text-gold-400">{conversationalTime(t.time)}</span>
+                <span className="text-stone-300">{conversationalTime(t.event)}</span>
               </li>
             ))}
           </ul>
@@ -102,6 +107,14 @@ export default function Briefing() {
           </ul>
         </section>
 
+        {beginError && (
+          <div className="border border-red-900 bg-red-950/30 px-4 py-3 text-sm text-red-400">
+            {beginError}{' '}
+            <Link to="/dashboard" className="font-bold text-gold-400 underline">
+              Back to the docket
+            </Link>
+          </div>
+        )}
         <button onClick={begin} disabled={starting} className="btn-gold w-full py-3 text-lg">
           {starting ? 'Opening investigation…' : 'Begin Investigation'}
         </button>

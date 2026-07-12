@@ -4,10 +4,12 @@ import { Link } from 'react-router-dom'
 import Header from '../components/Header'
 import StatCard from '../components/StatCard'
 import { api } from '../lib/api'
-import type { CaseDocket, CaseSummary, UserProfile } from '../types'
+import type { ActiveInvestigation, CaseDocket, CaseSummary, UserProfile } from '../types'
 
 const DIFFICULTY_LABELS = ['Trivial', 'Easy', 'Moderate', 'Hard', 'Brutal']
 const POLL_INTERVAL_MS = 8000
+// Keep in sync with backend MAX_ACTIVE_INVESTIGATIONS (app/api/investigations.py).
+const MAX_ACTIVE_INVESTIGATIONS = 3
 
 function difficultyLabel(d: number) {
   return DIFFICULTY_LABELS[Math.min(4, Math.floor((d - 1) / 2))]
@@ -47,6 +49,45 @@ function CaseCard({ c, priority }: { c: CaseSummary; priority: boolean }) {
   )
 }
 
+function ActiveCaseRow({ inv }: { inv: ActiveInvestigation }) {
+  const c = inv.case_summary
+  return (
+    <Link
+      to={`/investigations/${inv.id}`}
+      className="panel flex items-center justify-between gap-4 transition hover:border-gold-500"
+    >
+      <div className="min-w-0">
+        <p className="text-[9px] uppercase tracking-[.25em] text-stone-600">
+          {c.crime_type} · {difficultyLabel(c.difficulty)}
+        </p>
+        <p className="truncate font-display text-lg text-stone-100">{c.title}</p>
+      </div>
+      <span className="shrink-0 text-xs font-black uppercase tracking-widest text-gold-400">
+        Resume →
+      </span>
+    </Link>
+  )
+}
+
+function ActiveInvestigationsRail({ investigations }: { investigations: ActiveInvestigation[] }) {
+  if (investigations.length === 0) return null
+  return (
+    <div className="mb-6 shrink-0">
+      <div className="mb-3 flex items-end justify-between border-b border-noir-800 pb-3">
+        <h2 className="section-title text-base">Active Investigations</h2>
+        <span className="text-sm normal-case tracking-normal text-stone-500">
+          {investigations.length} / {MAX_ACTIVE_INVESTIGATIONS} in progress
+        </span>
+      </div>
+      <div className="space-y-2">
+        {investigations.map((inv) => (
+          <ActiveCaseRow key={inv.id} inv={inv} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function DraftingCard() {
   return (
     <div className="case-folder opacity-55">
@@ -70,7 +111,7 @@ const DESK_TOOLS = [
 
 function DeskRail({ me }: { me: UserProfile | null }) {
   return (
-    <aside className="hidden space-y-5 overflow-hidden xl:block">
+    <aside className="dashboard-left-rail hidden min-h-0 space-y-4 overflow-hidden xl:block">
       <div className="panel overflow-hidden">
         <p className="text-[10px] uppercase tracking-[.32em] text-stone-600">Detective credentials</p>
         <p className="mt-3 font-display text-xl text-stone-100">{me?.name ?? 'Commission Agent'}</p>
@@ -98,7 +139,7 @@ function DeskRail({ me }: { me: UserProfile | null }) {
 
 function DispatchBoard() {
   return (
-    <aside className="hidden space-y-5 overflow-hidden xl:block">
+    <aside className="dashboard-column-scroll hidden min-h-0 space-y-5 overflow-y-auto pr-2 xl:block">
       <div className="flex items-center justify-between border-b border-noir-700 pb-3">
         <h2 className="font-display text-sm uppercase tracking-[.22em] text-stone-200">Night Dispatch</h2>
         <Radio className="h-4 w-4 animate-pulse text-red-500/70" />
@@ -125,17 +166,32 @@ function DispatchBoard() {
 export default function Dashboard() {
   const [docket, setDocket] = useState<CaseDocket | null>(null)
   const [me, setMe] = useState<UserProfile | null>(null)
+  const [active, setActive] = useState<ActiveInvestigation[]>([])
   const [error, setError] = useState<string | null>(null)
-  const pollTimer = useRef<ReturnType<typeof setInterval>>(null)
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    const loadDocket = () => api.listCases().then(setDocket).catch((e) => setError(e.message))
+    let cancelled = false
+    const loadDocket = async () => {
+      try {
+        const d = await api.listCases()
+        if (cancelled) return
+        setDocket(d)
+        // Only keep polling while the commission is still drafting replacements;
+        // a full, idle docket doesn't change on its own.
+        if (d.generating || d.entries.length < d.pool_size) {
+          pollTimer.current = setTimeout(loadDocket, POLL_INTERVAL_MS)
+        }
+      } catch (e) {
+        if (!cancelled) setError((e as Error).message)
+      }
+    }
     loadDocket()
     api.getMe().then(setMe).catch(() => {})
-    // While the pool is below target, new cases appear as Gemini finishes them.
-    pollTimer.current = setInterval(loadDocket, POLL_INTERVAL_MS)
+    api.listActiveInvestigations().then(setActive).catch(() => {})
     return () => {
-      if (pollTimer.current) clearInterval(pollTimer.current)
+      cancelled = true
+      if (pollTimer.current) clearTimeout(pollTimer.current)
     }
   }, [])
 
@@ -168,7 +224,8 @@ export default function Dashboard() {
 
         <div className="grid min-h-0 flex-1 gap-8 overflow-hidden xl:grid-cols-[220px_minmax(0,1fr)_240px]">
           <DeskRail me={me} />
-          <section className="min-h-0 min-w-0 overflow-y-auto pr-2 dashboard-case-scroll">
+          <section className="dashboard-column-scroll min-h-0 min-w-0 overflow-y-auto pr-2">
+        <ActiveInvestigationsRail investigations={active} />
         <div className="mb-6 flex items-end justify-between border-b border-noir-800 pb-4">
           <h2 className="section-title lamp-flicker">
             Case Docket
