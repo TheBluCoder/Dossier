@@ -64,6 +64,16 @@ Copy `.env.example` → `.env` (repo root; compose passes it to the backend).
   docker-compose; the mounted `.env.local` is the single source. Frontend SDK
   is `@clerk/react` (the old `@clerk/clerk-react` is deprecated — don't
   reintroduce it).
+- The Clerk session token does NOT include `name`/`email`/`image_url` by
+  default — only `sub`/`iss`/`exp`/etc. This instance's dev session token has
+  been configured (`clerk config patch`, `session.claims`) to add them via
+  shortcodes: `name={{user.full_name}}`, `first_name={{user.first_name}}`,
+  `email={{user.primary_email_address}}`, `image_url={{user.image_url}}` —
+  `backend/app/core/auth.py`'s `get_current_user()` reads exactly those keys.
+  Without this, every real signed-in user falls back to the literal string
+  `"Detective"`. If a production instance is ever provisioned, repeat this
+  config on it too (`clerk config patch --instance prod`) — it does not carry
+  over automatically between instances.
 
 ## Architecture
 
