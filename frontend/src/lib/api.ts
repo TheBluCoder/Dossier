@@ -1,6 +1,7 @@
 import type {
+  ActiveInvestigation,
   CaseBriefing,
-  CaseSummary,
+  CaseDocket,
   Evidence,
   Investigation,
   Leaderboard,
@@ -11,7 +12,9 @@ import type {
   UserProfile,
 } from '../types'
 
-const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
+// Production uses the current Vercel origin so /api routes reach the backend
+// service through vercel.json. Local development calls FastAPI directly.
+const API_URL = import.meta.env.VITE_API_URL ?? (import.meta.env.DEV ? 'http://localhost:8000' : '')
 
 // The auth provider registers how to fetch a bearer token (Clerk JWT or dev token).
 let tokenProvider: () => Promise<string | null> = async () => 'dev'
@@ -41,12 +44,7 @@ export const api = {
   getProfile: () => request<ProfileWithHistory>('/api/profile'),
   getLeaderboard: () => request<Leaderboard>('/api/leaderboard'),
 
-  listCases: () => request<CaseSummary[]>('/api/cases'),
-  generateCase: (crime_type = 'murder') =>
-    request<CaseSummary>('/api/cases/generate', {
-      method: 'POST',
-      body: JSON.stringify({ crime_type }),
-    }),
+  listCases: () => request<CaseDocket>('/api/cases'),
   getCaseBriefing: (caseId: string) => request<CaseBriefing>(`/api/cases/${caseId}`),
 
   createInvestigation: (case_id: string) =>
@@ -55,6 +53,7 @@ export const api = {
       body: JSON.stringify({ case_id }),
     }),
   getInvestigation: (id: string) => request<Investigation>(`/api/investigations/${id}`),
+  listActiveInvestigations: () => request<ActiveInvestigation[]>('/api/investigations/active'),
   updateNotes: (id: string, notes: string) =>
     request<{ ok: boolean }>(`/api/investigations/${id}/notes`, {
       method: 'PUT',
@@ -70,6 +69,10 @@ export const api = {
 
   getMessages: (id: string, suspectId: string) =>
     request<Message[]>(`/api/investigations/${id}/suspects/${suspectId}/messages`),
+  getVoiceToken: (id: string, suspectId: string) =>
+    request<{ token: string }>(`/api/audio/speech-engine/token/${id}/${suspectId}`, {
+      method: 'POST',
+    }),
 
   submitVerdict: (
     id: string,
@@ -135,8 +138,10 @@ export async function streamMessage(
   }
 }
 
-/** Synthesize suspect speech via ElevenLabs; returns a playable object URL. */
-export async function synthesizeSpeech(text: string, voiceId: string | null): Promise<string> {
+/** Speak a stored suspect message via ElevenLabs; returns a playable object URL.
+ * The backend synthesizes from the persisted message (with its emotion/delivery),
+ * so no free-form text ever reaches the TTS provider. */
+export async function synthesizeSpeech(messageId: string): Promise<string> {
   const token = await tokenProvider()
   const res = await fetch(`${API_URL}/api/audio/synthesize`, {
     method: 'POST',
@@ -144,7 +149,7 @@ export async function synthesizeSpeech(text: string, voiceId: string | null): Pr
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
-    body: JSON.stringify({ text, voice_id: voiceId }),
+    body: JSON.stringify({ message_id: messageId }),
   })
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: res.statusText }))

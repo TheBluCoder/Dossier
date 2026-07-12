@@ -6,6 +6,15 @@ export interface CaseSummary {
   summary: string
   status: string
   suspect_count: number
+  evidence_count: number
+  failure_count: number
+  reward_rs: number
+}
+
+export interface CaseDocket {
+  entries: CaseSummary[]
+  pool_size: number
+  generating: boolean
 }
 
 export interface Victim {
@@ -36,6 +45,7 @@ export interface Suspect {
   alibi: string
   personality: string
   voice_id: string | null
+  image_url?: string | null
   state?: SuspectState
 }
 
@@ -56,7 +66,8 @@ export interface Evidence {
   reviewed?: boolean
 }
 
-export interface CaseBriefing extends Omit<CaseSummary, 'suspect_count'> {
+export interface CaseBriefing
+  extends Omit<CaseSummary, 'suspect_count' | 'evidence_count' | 'failure_count' | 'reward_rs'> {
   victim: Victim
   crime_scene: CrimeScene
   public_timeline: TimelineEntry[]
@@ -76,6 +87,10 @@ export interface Investigation {
   case?: CaseBriefing
 }
 
+export interface ActiveInvestigation extends Investigation {
+  case_summary: CaseSummary
+}
+
 export interface Delivery {
   pace: string
   hesitation: boolean
@@ -92,7 +107,9 @@ export interface Message {
   emotion: string
   emotion_intensity: number
   delivery: Delivery
+  trust_before: number
   trust_after: number
+  patience_before: number
   patience_after: number
   conversation_ended: boolean
   created_at: string

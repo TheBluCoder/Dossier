@@ -4,8 +4,10 @@
   event: meta    -> full message record       (emotion, trust/patience, etc.)
   event: error   -> {"detail": "..."}
 
-The full Gemini response is generated first (we need validated JSON), then the
-text is streamed in small chunks for the typing effect.
+Tokens are streamed live from Gemini while the reply is still generating; the
+validated full message is persisted and sent as the final `meta` event. A leak
+guard swaps in an in-character deflection if the reply ever contains
+system-prompt markers, so no meta content reaches the player.
 """
 
 import asyncio
@@ -13,21 +15,24 @@ import json
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-from app.api.deps import load_case, load_investigation, oid
+from app.api.deps import load_case, load_investigation, oid, recent_history
 from app.core.auth import AuthUser, get_current_user
+from app.core.config import get_settings
 from app.core.db import get_db
+from app.core.messages import ErrorMessages
+from app.core.ratelimit import check_rate_limit
 from app.models.investigation import InterrogationMessage, SuspectState
 from app.services import gemini
 
 router = APIRouter(prefix="/api/investigations/{investigation_id}/suspects", tags=["interrogation"])
 
-CHUNK_SIZE = 12  # characters per SSE token event
+MESSAGES_PER_MINUTE = 20  # each message is a Gemini call — cap the burn rate
 
 
 class PlayerMessage(BaseModel):
-    content: str
+    content: str = Field(max_length=1000)
     input_type: str = "text"  # text | voice
     evidence_id: str | None = None
 
@@ -66,45 +71,61 @@ async def send_message(
     body: PlayerMessage,
     user: AuthUser = Depends(get_current_user),
 ):
+    check_rate_limit(f"msg:{user.id}", MESSAGES_PER_MINUTE)
     inv = await load_investigation(investigation_id, user)
     if inv["status"] != "in_progress":
-        raise HTTPException(status_code=409, detail="Investigation is closed")
+        raise HTTPException(status_code=409, detail=ErrorMessages.INVESTIGATION_CLOSED)
 
     _, case = await load_case(inv["case_id"])
     suspect = case.suspect(suspect_id)
     if not suspect:
-        raise HTTPException(status_code=404, detail="Suspect not found")
+        raise HTTPException(status_code=404, detail=ErrorMessages.SUSPECT_NOT_FOUND)
 
     state = SuspectState(**inv["suspect_state"].get(suspect_id, {}))
     if state.conversation_ended:
-        raise HTTPException(status_code=409, detail=f"{suspect.name} refuses to speak with you again.")
+        raise HTTPException(status_code=409, detail=ErrorMessages.suspect_refuses(suspect.name))
 
     presented = None
     if body.evidence_id:
         item = case.evidence_item(body.evidence_id)
         if not item:
-            raise HTTPException(status_code=404, detail="Evidence not found")
+            raise HTTPException(status_code=404, detail=ErrorMessages.EVIDENCE_NOT_FOUND)
         presented = {"title": item.title, "description": item.description}
 
-    history = []
-    async for doc in (
-        get_db()
-        .interrogations.find({"investigation_id": investigation_id, "suspect_id": suspect_id})
-        .sort("created_at", 1)
-    ):
-        history.append({"player_message": doc["player_message"], "response": doc["response"]})
+    history = await recent_history(
+        investigation_id, suspect_id, get_settings().max_history_messages
+    )
 
     async def event_stream():
+        released = ""
+        reply = None
+        leaked = False
         try:
-            reply = await gemini.suspect_reply(
+            stream = gemini.suspect_reply_stream(
                 case, suspect, state, history, body.content, presented
             )
+            async for kind, payload in stream:
+                if kind == "token":
+                    # Stop releasing text the moment a system-prompt marker
+                    # appears — the stored reply becomes a deflection below.
+                    if leaked:
+                        continue
+                    if gemini.contains_meta_leak(released + payload):
+                        leaked = True
+                        continue
+                    released += payload
+                    yield _sse("token", {"text": payload})
+                else:
+                    reply = payload
         except HTTPException as exc:
             yield _sse("error", {"detail": exc.detail})
             return
         except Exception:
-            yield _sse("error", {"detail": "The suspect stares at you in silence. (LLM error — try again.)"})
+            yield _sse("error", {"detail": ErrorMessages.SUSPECT_RESPONSE_UNAVAILABLE})
             return
+
+        if reply is None or leaked or gemini.contains_meta_leak(reply.response):
+            reply = gemini.deflection_reply()
 
         trust_after = max(0, min(100, state.trust + reply.trust_change))
         patience_after = max(0, min(100, state.patience + reply.patience_change))
@@ -127,25 +148,23 @@ async def send_message(
             patience_after=patience_after,
             conversation_ended=ended,
         )
-        result = await get_db().interrogations.insert_one(record.model_dump())
-        await get_db().investigations.update_one(
-            {"_id": oid(investigation_id)},
-            {
-                "$set": {
-                    f"suspect_state.{suspect_id}": SuspectState(
-                        trust=trust_after, patience=patience_after, conversation_ended=ended
-                    ).model_dump()
-                }
-            },
+        db = get_db()
+        insert_result, _ = await asyncio.gather(
+            db.interrogations.insert_one(record.model_dump()),
+            db.investigations.update_one(
+                {"_id": oid(investigation_id)},
+                {
+                    "$set": {
+                        f"suspect_state.{suspect_id}": SuspectState(
+                            trust=trust_after, patience=patience_after, conversation_ended=ended
+                        ).model_dump()
+                    }
+                },
+            ),
         )
 
-        text = reply.response
-        for i in range(0, len(text), CHUNK_SIZE):
-            yield _sse("token", {"text": text[i : i + CHUNK_SIZE]})
-            await asyncio.sleep(0.02)
-
         doc = record.model_dump()
-        doc["_id"] = result.inserted_id
+        doc["_id"] = insert_result.inserted_id
         doc["created_at"] = record.created_at
         yield _sse("meta", _public_message(doc))
 

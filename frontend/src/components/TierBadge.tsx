@@ -2,7 +2,7 @@ import { Award, Crown, Medal, Shield, Star, type LucideIcon } from 'lucide-react
 import type { Tier } from '../types'
 
 // Tier → icon/color mapping mirrors detective-k-game's TierBadge.
-const TIER_STYLE: Record<string, { icon: LucideIcon; color: string; border: string; bg: string }> = {
+export const TIER_STYLE: Record<string, { icon: LucideIcon; color: string; border: string; bg: string }> = {
   Rookie: { icon: Shield, color: 'text-gray-400', border: 'border-gray-400', bg: 'bg-gray-400/10' },
   Inspector: { icon: Star, color: 'text-blue-400', border: 'border-blue-400', bg: 'bg-blue-400/10' },
   Senior: { icon: Medal, color: 'text-purple-400', border: 'border-purple-400', bg: 'bg-purple-400/10' },

@@ -6,11 +6,14 @@ Never return raw case documents from an endpoint — strip private fields here.
 from typing import Any
 
 from app.models.case import Case, Suspect
+from app.models.user import reputation_delta
+from app.services.voice import voice_for_suspect
 
 
 def public_suspect(suspect: Suspect) -> dict[str, Any]:
     data = suspect.model_dump()
     data.pop("private", None)
+    data["voice_id"] = voice_for_suspect(suspect)
     return data
 
 
@@ -23,6 +26,9 @@ def public_case_summary(case_id: str, case: Case) -> dict[str, Any]:
         "summary": case.summary,
         "status": case.status,
         "suspect_count": len(case.suspects),
+        "evidence_count": len(case.evidence),
+        "failure_count": case.failure_count,
+        "reward_rs": reputation_delta(True, case.difficulty),
     }
 
 

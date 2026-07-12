@@ -111,6 +111,15 @@ verdict is stored.
 - **Suspect knowledge boundaries**: each agent's system prompt contains only
   its own `known_facts` / `unknown_facts` / `knows_about_others`. Only the
   culprit's prompt references the crime details.
+- **Case pool** (`services/case_pool.py`): the commission always keeps
+  `CASE_POOL_SIZE` (default 3) cases with status "available". Top-ups run in
+  the background — kicked on startup, after a correct verdict (the solved
+  case's status flips to "solved" and drops off the docket), and
+  self-healing from GET /api/cases. Players never trigger generation from
+  the UI; `POST /api/cases/generate` remains as a dev/demo utility only.
+  GET /api/cases returns `{entries, pool_size, generating}` and the
+  dashboard polls every 8s, showing "new case being drafted" placeholders
+  until replacements land.
 - **Verdict correctness is decided by the backend** (accused_id ==
   solution.culprit_id). Gemini only writes the flavor "commission review".
 - Conversation history sent to Gemini is capped at `max_history_messages` (12).
@@ -123,11 +132,15 @@ verdict is stored.
 ### SSE protocol (interrogation)
 
 `POST /api/investigations/{id}/suspects/{sid}/messages` responds
-`text/event-stream`: `token` events (`{"text": ...}`) for the typing effect,
-one final `meta` event (the full stored message: emotion, trust/patience after,
-conversation_ended), or `error`. The full Gemini reply is generated and
-persisted before streaming starts. Client parser:
-[frontend/src/lib/api.ts](frontend/src/lib/api.ts) `streamMessage()`.
+`text/event-stream`: `token` events (`{"text": ...}`) streamed live from
+Gemini (the `response` JSON field is extracted incrementally while the rest
+of the object generates), one final `meta` event (the full stored message:
+emotion, trust/patience before/after, conversation_ended), or `error`. The
+validated reply is persisted before `meta` is sent; a leak guard replaces any
+reply containing system-prompt markers with an in-character deflection. Client
+parser: [frontend/src/lib/api.ts](frontend/src/lib/api.ts) `streamMessage()`.
+TTS (`POST /api/audio/synthesize`) takes a `message_id`, never free text —
+audio is synthesized (and cached in-memory) from the stored message.
 
 ### Frontend layout (frontend/src/)
 
@@ -172,12 +185,9 @@ seeding; guest + Clerk auth paths.
 Not done (Priority 3/4 in `docs/GDD.md` §10):
 - Veo-generated CCTV video evidence (models support `media_url`; generation
   and storage not implemented — pre-generate for the demo if needed)
-- Media storage (Cloudinary/GCS); TTS audio is synthesized per playback, not
-  persisted (`audio_url` field exists but is always null)
-- Two more pre-generated cases for the dashboard (run POST /api/cases/generate)
+- Media storage (Cloudinary/GCS); TTS audio is cached in-memory per message,
+  not persisted (`audio_url` field exists but is always null)
 - Relationship map, interactive timeline, contradiction highlighting
-- Real token-level streaming from Gemini (currently the validated full reply is
-  chunked into SSE tokens)
 
 ## Git workflow
 
