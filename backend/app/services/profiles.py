@@ -21,11 +21,25 @@ async def upsert_user(user: AuthUser) -> dict:
     doc = await db.users.find_one_and_update(
         {"user_id": user.id},
         {
-            "$set": {"name": user.name, "avatar_url": user.avatar_url, "last_active": utcnow()},
-            "$setOnInsert": UserProfile(user_id=user.id).model_dump(
-                exclude={"user_id", "name", "avatar_url", "last_active"}
+            "$set": {"avatar_url": user.avatar_url, "last_active": utcnow()},
+            # `name` seeds from the auth provider only on the FIRST login —
+            # once a player customizes it, later logins must not clobber it.
+            "$setOnInsert": UserProfile(user_id=user.id, name=user.name).model_dump(
+                exclude={"user_id", "avatar_url", "last_active"}
             ),
         },
+        upsert=True,
+        return_document=True,
+    )
+    return doc
+
+
+async def set_username(user_id: str, name: str) -> dict:
+    """Update the player's public display name (see UserProfile.name)."""
+    db = get_db()
+    doc = await db.users.find_one_and_update(
+        {"user_id": user_id},
+        {"$set": {"name": name, "last_active": utcnow()}},
         upsert=True,
         return_document=True,
     )

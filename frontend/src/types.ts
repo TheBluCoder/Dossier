@@ -53,6 +53,7 @@ export interface SuspectState {
   trust: number
   patience: number
   conversation_ended: boolean
+  cooldown_until: string | null
 }
 
 export interface Evidence {

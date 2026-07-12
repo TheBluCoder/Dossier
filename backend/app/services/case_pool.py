@@ -11,7 +11,7 @@ import random
 
 from app.core.config import get_settings
 from app.core.db import get_db
-from app.services import gemini, images
+from app.services import gemini, images, voice_design
 
 logger = logging.getLogger(__name__)
 
@@ -69,6 +69,8 @@ async def ensure_case_pool() -> None:
                         crime_type, used_titles=used_titles, used_names=used_names
                     )
                     await images.add_suspect_portraits(case)  # best-effort, never raises
+                    await images.add_evidence_images(case)  # best-effort, never raises
+                    await voice_design.add_suspect_voices(case)  # best-effort, never raises
                 except Exception:
                     failures += 1
                     logger.exception("Case generation failed (%s/%s)", failures, MAX_CONSECUTIVE_FAILURES)

@@ -11,6 +11,7 @@ class SuspectState(BaseModel):
     trust: int = 50
     patience: int = 100
     conversation_ended: bool = False
+    cooldown_until: datetime | None = None
 
 
 class Verdict(BaseModel):

@@ -12,6 +12,7 @@ system-prompt markers, so no meta content reaches the player.
 
 import asyncio
 import json
+from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -29,6 +30,13 @@ from app.services import gemini
 router = APIRouter(prefix="/api/investigations/{investigation_id}/suspects", tags=["interrogation"])
 
 MESSAGES_PER_MINUTE = 20  # each message is a Gemini call — cap the burn rate
+SUSPECT_COOLDOWN = timedelta(minutes=3)  # walking out on a suspect keeps them off-limits a while
+
+
+def _naive_utcnow() -> datetime:
+    # suspect_state round-trips through Mongo, which strips tzinfo on read —
+    # comparisons against cooldown_until must stay naive on both sides.
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class PlayerMessage(BaseModel):
@@ -64,6 +72,31 @@ async def get_messages(
     return messages
 
 
+@router.post("/{suspect_id}/leave")
+async def leave_suspect(
+    investigation_id: str, suspect_id: str, user: AuthUser = Depends(get_current_user)
+):
+    """Called when the player walks out of the interrogation room. Starts a
+    cooldown before this suspect can be questioned again — no benefit to
+    hopping in and out of the room to dodge a bad patience swing."""
+    inv = await load_investigation(investigation_id, user)
+    _, case = await load_case(inv["case_id"])
+    suspect = case.suspect(suspect_id)
+    if not suspect:
+        raise HTTPException(status_code=404, detail=ErrorMessages.SUSPECT_NOT_FOUND)
+
+    state = SuspectState(**inv["suspect_state"].get(suspect_id, {}))
+    if state.conversation_ended:
+        return {"cooldown_until": None}
+
+    cooldown_until = _naive_utcnow() + SUSPECT_COOLDOWN
+    await get_db().investigations.update_one(
+        {"_id": oid(investigation_id)},
+        {"$set": {f"suspect_state.{suspect_id}.cooldown_until": cooldown_until}},
+    )
+    return {"cooldown_until": cooldown_until.isoformat()}
+
+
 @router.post("/{suspect_id}/messages")
 async def send_message(
     investigation_id: str,
@@ -84,6 +117,11 @@ async def send_message(
     state = SuspectState(**inv["suspect_state"].get(suspect_id, {}))
     if state.conversation_ended:
         raise HTTPException(status_code=409, detail=ErrorMessages.suspect_refuses(suspect.name))
+    if state.cooldown_until and state.cooldown_until > _naive_utcnow():
+        remaining = int((state.cooldown_until - _naive_utcnow()).total_seconds())
+        raise HTTPException(
+            status_code=429, detail=ErrorMessages.suspect_cooling_down(suspect.name, remaining)
+        )
 
     presented = None
     if body.evidence_id:
@@ -129,7 +167,11 @@ async def send_message(
 
         trust_after = max(0, min(100, state.trust + reply.trust_change))
         patience_after = max(0, min(100, state.patience + reply.patience_change))
-        ended = reply.conversation_ended or patience_after == 0
+        # Patience hitting 0 is a precondition, never a trigger on its own — the
+        # suspect (model) still has to actually choose to end it (see
+        # prompts.SUSPECT_SYSTEM). A patience_change that reaches 0 does not by
+        # itself end the conversation.
+        ended = patience_after == 0 and reply.conversation_ended
 
         record = InterrogationMessage(
             investigation_id=investigation_id,

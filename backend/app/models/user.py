@@ -47,6 +47,10 @@ def reputation_delta(correct: bool, difficulty: int) -> int:
 
 class UserProfile(BaseModel):
     user_id: str
+    # Public display name. Seeded from the auth provider's real name on first
+    # login only — player-editable afterward via PUT /api/profile/username,
+    # and never overwritten again by upsert_user (many players don't want
+    # their real Google/Clerk name shown on a public leaderboard).
     name: str = "Detective"
     avatar_url: str | None = None
     reputation: int = 0
