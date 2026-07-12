@@ -55,6 +55,7 @@ export default function Interrogation() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null)
   const endVoiceSessionRef = useRef<() => Promise<void>>(async () => {})
   const modeRef = useRef<Mode>(mode)
   modeRef.current = mode
@@ -157,6 +158,19 @@ export default function Interrogation() {
     } catch {
       // Voice is a garnish — never block the game on TTS errors.
       setSpeaking(false)
+    }
+  }
+
+  const copyReply = async (text: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopiedIndex(index)
+
+      window.setTimeout(() => {
+        setCopiedIndex(null)
+      }, 1500)
+    } catch {
+      setError('Could not copy the suspect reply.')
     }
   }
 
@@ -465,11 +479,10 @@ export default function Interrogation() {
           {transcript.map((entry, i) => (
             <div key={i} className={`flex ${entry.role === 'player' ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${
-                  entry.role === 'player'
+                className={`max-w-[80%] rounded-lg px-4 py-2 text-sm ${entry.role === 'player'
                     ? 'bg-gold-500/15 text-stone-100'
                     : 'bg-noir-800 text-stone-200'
-                }`}
+                  }`}
               >
                 {entry.evidenceId && (
                   <p className="mb-1 text-xs text-gold-400">
@@ -497,6 +510,17 @@ export default function Interrogation() {
                       </span>
                     )}
                   </p>
+                )}
+
+                {entry.role === 'suspect' && !entry.streaming && entry.text && (
+                  <button
+                    type="button"
+                    onClick={() => copyReply(entry.text, i)}
+                    className="mt-2 text-xs text-stone-500 transition hover:text-gold-400"
+                    title="Copy suspect reply"
+                  >
+                    {copiedIndex === i ? '✓ Copied' : '📋 Copy reply'}
+                  </button>
                 )}
               </div>
             </div>
