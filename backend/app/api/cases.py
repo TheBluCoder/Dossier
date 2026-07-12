@@ -5,8 +5,9 @@ from app.api.deps import load_case
 from app.core.auth import AuthUser, get_current_user
 from app.core.config import get_settings
 from app.core.db import get_db
+from app.core.ratelimit import check_rate_limit
 from app.models.case import Case
-from app.services import case_pool, gemini, sanitize
+from app.services import case_pool, gemini, images, sanitize
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 
@@ -37,7 +38,12 @@ async def list_cases(user: AuthUser = Depends(get_current_user)):
 @router.post("/generate", status_code=201)
 async def generate_case(body: GenerateRequest, user: AuthUser = Depends(get_current_user)):
     """Dev/demo utility — normal pool refills happen in the background."""
-    case = await gemini.generate_case(body.crime_type)
+    check_rate_limit(f"gen:{user.id}", limit=3)  # each call is a gemini-pro generation
+    used_titles, used_names = await case_pool.generation_exclusions()
+    case = await gemini.generate_case(
+        body.crime_type, used_titles=used_titles, used_names=used_names
+    )
+    await images.add_suspect_portraits(case)  # best-effort, never raises
     result = await get_db().cases.insert_one(case.model_dump())
     return sanitize.public_case_summary(str(result.inserted_id), case)
 

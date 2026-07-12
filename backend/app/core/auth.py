@@ -13,6 +13,7 @@ from jose import jwt
 from pydantic import BaseModel
 
 from app.core.config import get_settings
+from app.core.messages import ErrorMessages
 
 
 class AuthUser(BaseModel):
@@ -44,15 +45,23 @@ async def get_current_user(request: Request) -> AuthUser:
         return AuthUser(id="dev-user", name="Guest Detective")
 
     if not token:
-        raise HTTPException(status_code=401, detail="Missing bearer token")
+        raise HTTPException(status_code=401, detail=ErrorMessages.MISSING_BEARER_TOKEN)
     if not settings.clerk_jwks_url:
-        raise HTTPException(status_code=500, detail="CLERK_JWKS_URL not configured")
+        raise HTTPException(status_code=500, detail=ErrorMessages.AUTH_NOT_CONFIGURED)
 
     try:
         jwks = await _get_jwks(settings.clerk_jwks_url)
-        claims = jwt.decode(token, jwks, options={"verify_aud": False})
+        # Pin the algorithm (never trust the token header) and verify the
+        # issuer when one is configured.
+        claims = jwt.decode(
+            token,
+            jwks,
+            algorithms=["RS256"],
+            issuer=settings.clerk_issuer or None,
+            options={"verify_aud": False, "verify_iss": bool(settings.clerk_issuer)},
+        )
     except Exception:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail=ErrorMessages.INVALID_TOKEN)
 
     return AuthUser(
         id=claims["sub"],

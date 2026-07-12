@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import { api } from '../lib/api'
+import { conversationalTime } from '../lib/time'
 import { useInvestigationStore } from '../store/investigationStore'
 import type { Resolution as ResolutionData } from '../types'
 
@@ -23,9 +24,9 @@ export default function Resolution() {
   const suspectName = (sid: string) => suspects.find((s) => s.id === sid)?.name ?? sid
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Case Resolution" />
-      <main className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-3xl space-y-6 px-6 py-8">
         <div
           className={`panel border-2 text-center ${
             resolution.correct ? 'border-emerald-500' : 'border-red-500'
@@ -64,9 +65,9 @@ export default function Resolution() {
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-widest text-stone-500">
             What actually happened
           </h3>
-          <p className="mb-3 text-sm text-stone-300">{resolution.explanation}</p>
+          <p className="mb-3 text-sm text-stone-300">{conversationalTime(resolution.explanation)}</p>
           <p className="text-sm text-stone-400">
-            <span className="text-gold-400">Motive:</span> {resolution.motive}
+            <span className="text-gold-400">Motive:</span> {conversationalTime(resolution.motive)}
           </p>
         </section>
 
@@ -77,8 +78,8 @@ export default function Resolution() {
           <ul className="space-y-2">
             {resolution.canonical_timeline.map((t, i) => (
               <li key={i} className="flex gap-4 text-sm">
-                <span className="w-16 shrink-0 font-mono text-gold-400">{t.time}</span>
-                <span className="text-stone-300">{t.event}</span>
+                <span className="w-20 shrink-0 font-mono text-gold-400">{conversationalTime(t.time)}</span>
+                <span className="text-stone-300">{conversationalTime(t.event)}</span>
               </li>
             ))}
           </ul>

@@ -58,9 +58,9 @@ export default function Leaderboard() {
   const meInList = data?.entries.some((e) => e.user_id === data.me.user_id) ?? false
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Hall of Fame" />
-      <main className="mx-auto max-w-3xl space-y-4 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-3xl space-y-4 px-6 py-8">
         <h2 className="section-title lamp-flicker">Global Leaderboard</h2>
         <p className="text-sm text-stone-500">Top detectives by reputation score.</p>
 

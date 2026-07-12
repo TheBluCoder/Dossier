@@ -38,7 +38,10 @@ docker compose up --build
 
 On first boot the backend seeds one handcrafted demo case, so the game is
 browsable immediately without API keys. Suspect replies need `GEMINI_API_KEY`;
-voice playback needs `ELEVENLABS_API_KEY`.
+voice playback needs `ELEVENLABS_API_KEY`. Hands-free Voice Dialog also needs
+`PUBLIC_BACKEND_URL` set to a public HTTPS URL that forwards to the backend (for
+example, an ngrok tunnel to port 8000). ElevenLabs connects back to
+`/api/audio/speech-engine/ws` over WSS; no API key is exposed to the browser.
 
 Auth defaults to **dev bypass** (`DEV_AUTH_BYPASS=true`) — the frontend shows a
 "Continue as Guest" button. Set Clerk keys in `.env` to enable Google Sign-In.

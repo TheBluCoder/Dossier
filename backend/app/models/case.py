@@ -52,6 +52,7 @@ class Suspect(BaseModel):
     alibi: str
     personality: str
     voice_id: str | None = None  # ElevenLabs voice
+    image_url: str | None = None  # generated portrait; null falls back to initials
     private: SuspectPrivate
 
 
@@ -79,7 +80,7 @@ class Case(BaseModel):
     crime_type: str
     difficulty: int = Field(ge=1, le=10)
     summary: str
-    status: str = "available"  # available | solved | archived
+    status: str = "available"  # available | in_progress | solved | archived
     failure_count: int = 0  # wrong verdicts across all players; archived at 5
     victim: Victim
     crime_scene: CrimeScene

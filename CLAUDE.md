@@ -132,11 +132,15 @@ verdict is stored.
 ### SSE protocol (interrogation)
 
 `POST /api/investigations/{id}/suspects/{sid}/messages` responds
-`text/event-stream`: `token` events (`{"text": ...}`) for the typing effect,
-one final `meta` event (the full stored message: emotion, trust/patience after,
-conversation_ended), or `error`. The full Gemini reply is generated and
-persisted before streaming starts. Client parser:
-[frontend/src/lib/api.ts](frontend/src/lib/api.ts) `streamMessage()`.
+`text/event-stream`: `token` events (`{"text": ...}`) streamed live from
+Gemini (the `response` JSON field is extracted incrementally while the rest
+of the object generates), one final `meta` event (the full stored message:
+emotion, trust/patience before/after, conversation_ended), or `error`. The
+validated reply is persisted before `meta` is sent; a leak guard replaces any
+reply containing system-prompt markers with an in-character deflection. Client
+parser: [frontend/src/lib/api.ts](frontend/src/lib/api.ts) `streamMessage()`.
+TTS (`POST /api/audio/synthesize`) takes a `message_id`, never free text —
+audio is synthesized (and cached in-memory) from the stored message.
 
 ### Frontend layout (frontend/src/)
 
@@ -181,11 +185,9 @@ seeding; guest + Clerk auth paths.
 Not done (Priority 3/4 in `docs/GDD.md` §10):
 - Veo-generated CCTV video evidence (models support `media_url`; generation
   and storage not implemented — pre-generate for the demo if needed)
-- Media storage (Cloudinary/GCS); TTS audio is synthesized per playback, not
-  persisted (`audio_url` field exists but is always null)
+- Media storage (Cloudinary/GCS); TTS audio is cached in-memory per message,
+  not persisted (`audio_url` field exists but is always null)
 - Relationship map, interactive timeline, contradiction highlighting
-- Real token-level streaming from Gemini (currently the validated full reply is
-  chunked into SSE tokens)
 
 ## Git workflow
 

@@ -2,7 +2,7 @@ import { CheckCircle, Target, XCircle, FolderOpen } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Header from '../components/Header'
 import StatCard from '../components/StatCard'
-import TierBadge from '../components/TierBadge'
+import { TIER_STYLE } from '../components/TierBadge'
 import { api } from '../lib/api'
 import type { ProfileWithHistory } from '../types'
 
@@ -18,6 +18,8 @@ export default function Profile() {
   if (!profile) return <div className="p-10 text-center text-stone-500">Pulling your file…</div>
 
   const { tier } = profile
+  const badge = TIER_STYLE[tier.name] ?? TIER_STYLE.Rookie
+  const BadgeIcon = badge.icon
   const progress =
     tier.next_tier_rs !== null
       ? Math.min(
@@ -27,26 +29,21 @@ export default function Profile() {
       : 100
 
   return (
-    <div className="min-h-screen">
+    <div className="archive-page min-h-screen">
       <Header subtitle="Detective Profile" />
-      <main className="mx-auto max-w-3xl space-y-6 px-6 py-8">
+      <main className="archive-sheet mx-auto max-w-3xl space-y-6 px-6 py-8">
         {/* Hero card */}
         <section className="panel border-gold-500/50 shadow-[0_0_24px_rgba(245,197,66,0.08)]">
           <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-            <div className="lamp-flicker flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border-4 border-gold-500 shadow-[0_0_18px_rgba(245,197,66,0.3)]">
-              {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="h-full w-full object-cover grayscale" />
-              ) : (
-                <span className="font-display text-4xl text-gold-400">
-                  {profile.name.charAt(0).toUpperCase()}
-                </span>
-              )}
+            <div className="lamp-flicker flex h-24 w-24 shrink-0 items-center justify-center rounded-full border-4 border-gold-500 bg-noir-900 shadow-[0_0_18px_rgba(141,23,24,0.4)]">
+              <BadgeIcon className={`h-12 w-12 ${badge.color}`} />
             </div>
-            <div className="flex-1 space-y-2">
+            <div className="flex-1 space-y-1">
               <h2 className="font-display text-2xl text-stone-100">{profile.name}</h2>
-              <div className="flex justify-center sm:justify-start">
-                <TierBadge tier={tier} size="lg" />
-              </div>
+              <p className={`font-display text-sm uppercase tracking-widest ${badge.color}`}>
+                {tier.name}
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-stone-500">Detective Rank</p>
             </div>
             <div className="text-center sm:text-right">
               <p className="text-glow font-mono text-4xl font-bold text-gold-400">
