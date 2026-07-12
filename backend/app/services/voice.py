@@ -47,22 +47,38 @@ def conversational_times(text: str) -> str:
 
     return re.sub(r"\b([01]?\d|2[0-3]):([0-5]\d)\b", replace, text)
 
-EMOTION_TAGS = {
-    "nervous": "[nervously]",
-    "defensive": "[frustrated]",
-    "angry": "[angry]",
-    "sad": "[sad]",
-    "evasive": "[hesitates]",
-    "confident": "[confidently]",
-    "frightened": "[scared]",
+# (mild, strong) Eleven v3 audio tags per emotion — strong is used once
+# emotion_intensity crosses _STRONG_INTENSITY, so the same emotion label reads
+# very differently at 0.2 versus 0.9 instead of always hitting the same tag.
+EMOTION_TAGS: dict[str, tuple[str, str]] = {
+    "nervous": ("[nervously]", "[stammering nervously]"),
+    "defensive": ("[frustrated]", "[snaps defensively]"),
+    "angry": ("[angry]", "[shouting angrily]"),
+    "sad": ("[sad]", "[voice breaking]"),
+    "evasive": ("[hesitates]", "[evasively]"),
+    "confident": ("[confidently]", "[smugly]"),
+    "frightened": ("[scared]", "[voice shaking]"),
+    "terrified": ("[terrified]", "[panicked]"),
+    "amused": ("[chuckles]", "[laughs]"),
+    "sarcastic": ("[sarcastically]", "[laughs sarcastically]"),
+    "crying": ("[tearfully]", "[sobbing]"),
 }
+_STRONG_INTENSITY = 0.6
+
+
+def _emotion_tag(emotion: str, intensity: float) -> str | None:
+    tiers = EMOTION_TAGS.get(emotion)
+    if not tiers:
+        return None
+    mild, strong = tiers
+    return strong if intensity >= _STRONG_INTENSITY else mild
 
 
 def expressive_text(reply) -> str:
     """Prefix structured acting direction as provider audio tags."""
     spoken_text = conversational_times(reply.response)
     tags: list[str] = []
-    if tag := EMOTION_TAGS.get(reply.emotion):
+    if tag := _emotion_tag(reply.emotion, reply.emotion_intensity):
         tags.append(tag)
     if reply.delivery.hesitation and "[hesitates]" not in tags:
         tags.append("[hesitates]")

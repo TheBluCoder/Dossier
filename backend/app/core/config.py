@@ -18,11 +18,17 @@ class Settings(BaseSettings):
     elevenlabs_default_voice_id: str = "21m00Tcm4TlvDq8ikWAM"
     elevenlabs_masculine_voice_ids: str = "pNInz6obpgDQGcFmaJgB,ErXwobaYiN019PkySvjV,TxGEqnHWrfWFTfGW9XjX,VR6AewLTigWG4xSOukaG"
     elevenlabs_feminine_voice_ids: str = "21m00Tcm4TlvDq8ikWAM,AZnzlk1XvdvUeBnXmlld,EXAVITQu4vr4xnSDxMaL,MF3mGyEYCl7XYWbV9V6O"
+    # Model used to design a bespoke per-suspect voice from voice_description
+    # (age/accent/timbre casting note) — see services/voice_design.py.
+    elevenlabs_voice_design_model: str = "eleven_multilingual_ttv_v2"
     elevenlabs_output_audio_format: str = "pcm_16000"
     elevenlabs_turn_eagerness: str = "eager"
     elevenlabs_turn_timeout_seconds: int = 7
     elevenlabs_session_max_seconds: int = 900
-    elevenlabs_stability: float = 0.35
+    # v3 only honors 0.0/0.5/1.0 (rounds to nearest) — "Creative", "Natural",
+    # "Robust". 0.0 gives the broadest emotional range and the best audio-tag
+    # responsiveness, at the cost of occasional hallucinated words.
+    elevenlabs_stability: float = 0.0
     elevenlabs_similarity_boost: float = 0.75
     public_api_url: str = ""
     # Backward-compatible name used by the local development setup.

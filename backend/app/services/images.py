@@ -12,7 +12,7 @@ from fastapi import HTTPException
 
 from app.core.config import get_settings
 from app.core.messages import ErrorMessages
-from app.models.case import Case, Suspect
+from app.models.case import Case, Evidence, Suspect
 from app.services.storage import get_storage
 
 logger = logging.getLogger(__name__)
@@ -132,3 +132,50 @@ async def add_suspect_portraits(case: Case) -> None:
             logger.warning(
                 "Portrait generation skipped for suspect %s (%s)", suspect.id, suspect.name
             )
+
+
+# Evidence types worth an image — the rest (report, witness_statement, email,
+# phone_record, receipt, security_log) stay text-only.
+_VISUAL_EVIDENCE_TYPES = {"photo", "cctv"}
+
+
+def _evidence_prompt(evidence: Evidence) -> str:
+    # Built only from PUBLIC-shaped facts (canonical_facts is never sent to the
+    # frontend, but it also never names a suspect or the culprit — see
+    # prompts.CASE_GENERATION rule 15) — the description is a fallback for
+    # cases generated before canonical_facts was required for visual evidence.
+    facts = " ".join(evidence.canonical_facts) if evidence.canonical_facts else evidence.description
+    if evidence.type == "cctv":
+        return (
+            f"Black-and-white grainy CCTV security camera still frame capturing: {facts} "
+            "Low-resolution surveillance footage aesthetic, timestamp-corner framing, wide "
+            "angle lens distortion, any figures shown from a distance or partially obscured "
+            "so faces are not clearly identifiable, no readable on-screen text or captions."
+        )
+    return (
+        f"Photorealistic evidence photograph for a detective case file, depicting: {facts} "
+        "Documentary crime-scene photography style, natural lighting, no readable text or "
+        "logos, avoid any clearly identifiable face — focus on the scene and objects."
+    )
+
+
+async def add_evidence_images(case: Case) -> None:
+    """Best-effort: generate and attach an image for each photo/cctv evidence
+    item that doesn't already have one, mutating `case.evidence` in place.
+
+    Same silent-skip and sequential-generation rationale as
+    add_suspect_portraits above.
+    """
+    settings = get_settings()
+    if not settings.replicate_api_token:
+        return
+
+    for item in case.evidence:
+        if item.media_url or item.type not in _VISUAL_EVIDENCE_TYPES:
+            continue
+        try:
+            item.media_url = await generate_and_store_image(
+                _evidence_prompt(item), folder="detective-k/evidence", aspect_ratio="16:9"
+            )
+        except HTTPException:
+            logger.warning("Evidence image skipped for %s (%s)", item.id, item.title)

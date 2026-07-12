@@ -1,10 +1,102 @@
-import { CheckCircle, Target, XCircle, FolderOpen } from 'lucide-react'
+import { Check, CheckCircle, Target, XCircle, FolderOpen, Pencil, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import Header from '../components/Header'
 import StatCard from '../components/StatCard'
 import { TIER_STYLE } from '../components/TierBadge'
 import { api } from '../lib/api'
 import type { ProfileWithHistory } from '../types'
+
+function EditableName({
+  name,
+  onSaved,
+}: {
+  name: string
+  onSaved: (name: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(name)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const startEditing = () => {
+    setDraft(name)
+    setError(null)
+    setEditing(true)
+  }
+
+  const save = async () => {
+    const trimmed = draft.trim()
+    if (trimmed.length < 2 || trimmed.length > 24) {
+      setError('2-24 characters.')
+      return
+    }
+    setSaving(true)
+    setError(null)
+    try {
+      const updated = await api.updateUsername(trimmed)
+      onSaved(updated.name)
+      setEditing(false)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={startEditing}
+        className="group flex items-center gap-2 text-left"
+        title="Change your public detective name"
+      >
+        <h2 className="font-display text-2xl text-stone-100">{name}</h2>
+        <Pencil className="h-4 w-4 text-stone-600 group-hover:text-gold-400" aria-hidden="true" />
+      </button>
+    )
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-2">
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') void save()
+            if (e.key === 'Escape') setEditing(false)
+          }}
+          maxLength={24}
+          autoFocus
+          disabled={saving}
+          className="input-noir w-48 font-display text-lg"
+        />
+        <button
+          type="button"
+          onClick={save}
+          disabled={saving}
+          className="btn-ghost p-2"
+          aria-label="Save name"
+        >
+          <Check className="h-4 w-4 text-emerald-400" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setEditing(false)}
+          disabled={saving}
+          className="btn-ghost p-2"
+          aria-label="Cancel"
+        >
+          <X className="h-4 w-4 text-red-400" />
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-stone-600">
+        {error ?? 'Shown on the leaderboard instead of your real name.'}
+      </p>
+    </div>
+  )
+}
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileWithHistory | null>(null)
@@ -39,7 +131,10 @@ export default function Profile() {
               <BadgeIcon className={`h-12 w-12 ${badge.color}`} />
             </div>
             <div className="flex-1 space-y-1">
-              <h2 className="font-display text-2xl text-stone-100">{profile.name}</h2>
+              <EditableName
+                name={profile.name}
+                onSaved={(name) => setProfile({ ...profile, name })}
+              />
               <p className={`font-display text-sm uppercase tracking-widest ${badge.color}`}>
                 {tier.name}
               </p>

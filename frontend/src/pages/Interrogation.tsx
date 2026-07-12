@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useConversation } from '@elevenlabs/react'
 import {
   ArrowLeft,
@@ -37,11 +37,33 @@ function stripAudioTags(text: string): string {
   return text.replace(/^(?:\s*\[[^\]]+\])+\s*/, '').trimStart()
 }
 
+function formatCountdown(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
+
 export default function Interrogation() {
   const { id, suspectId } = useParams<{ id: string; suspectId: string }>()
+  const navigate = useNavigate()
   const { investigation, suspects, evidence, load, refreshSuspects } = useInvestigationStore()
   const suspect = suspects.find((s) => s.id === suspectId)
   const ended = suspect?.state?.conversation_ended
+  const cooldownUntil = suspect?.state?.cooldown_until ? Date.parse(suspect.state.cooldown_until) : null
+  const [cooldownRemaining, setCooldownRemaining] = useState(0)
+
+  useEffect(() => {
+    if (!cooldownUntil) {
+      setCooldownRemaining(0)
+      return
+    }
+    const tick = () => setCooldownRemaining(Math.max(0, Math.ceil((cooldownUntil - Date.now()) / 1000)))
+    tick()
+    const timer = setInterval(tick, 1000)
+    return () => clearInterval(timer)
+  }, [cooldownUntil])
+
+  const inCooldown = cooldownRemaining > 0
 
   const [mode, setMode] = useState<Mode>('select')
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([])
@@ -58,6 +80,12 @@ export default function Interrogation() {
   const endVoiceSessionRef = useRef<() => Promise<void>>(async () => {})
   const modeRef = useRef<Mode>(mode)
   modeRef.current = mode
+  const endedRef = useRef(ended)
+  endedRef.current = ended
+  const roomRef = useRef({ id, suspectId })
+  roomRef.current = { id, suspectId }
+  const [leaving, setLeaving] = useState(false)
+  const hasLeftRef = useRef(false)
   const conversation = useConversation({
     onMessage: (message: any) => {
       const rawText = message.message ?? message.user_transcript ?? message.agent_response
@@ -79,6 +107,10 @@ export default function Interrogation() {
   endVoiceSessionRef.current = async () => {
     if (conversation.status !== 'disconnected') await conversation.endSession()
   }
+  // Mirrors conversation.isSpeaking into a ref so an async leave handler can
+  // poll "is audio still playing" without depending on the render closure.
+  const isVoiceSpeakingRef = useRef(conversation.isSpeaking)
+  isVoiceSpeakingRef.current = conversation.isSpeaking
 
   const leaveVoiceDialog = async () => {
     try {
@@ -86,6 +118,53 @@ export default function Interrogation() {
     } catch (problem) {
       if (import.meta.env.DEV) console.error('Could not close voice session cleanly:', problem)
     }
+  }
+
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  // Let the suspect's voice finish before we actually tear the room down —
+  // cutting them off mid-sentence when the player clicks away feels broken.
+  const waitForAudioToFinish = async () => {
+    const deadline = Date.now() + 20_000 // safety cap: never block leaving for more than 20s
+    if (modeRef.current === 'voice') {
+      while (isVoiceSpeakingRef.current && Date.now() < deadline) await sleep(150)
+      return
+    }
+    const audio = audioRef.current
+    if (!audio || audio.paused || audio.ended) return
+    await Promise.race([
+      new Promise<void>((resolve) => {
+        const done = () => {
+          audio.removeEventListener('ended', done)
+          audio.removeEventListener('pause', done)
+          resolve()
+        }
+        audio.addEventListener('ended', done)
+        audio.addEventListener('pause', done)
+      }),
+      sleep(deadline - Date.now()),
+    ])
+  }
+
+  // The single deliberate "leave the room" action — used by every Back/Case
+  // file control below. Waits for any in-flight suspect audio to finish,
+  // then starts the suspect's cooldown before navigating back to the case.
+  const leaveRoom = async () => {
+    if (leaving) return
+    setLeaving(true)
+    await waitForAudioToFinish()
+    if (modeRef.current === 'voice') await leaveVoiceDialog()
+    const { id: roomId, suspectId: roomSuspectId } = roomRef.current
+    if (roomId && roomSuspectId && modeRef.current !== 'select' && !endedRef.current) {
+      hasLeftRef.current = true
+      try {
+        await api.leaveSuspect(roomId, roomSuspectId)
+      } catch {
+        // Best-effort — the unmount cleanup below covers this if it fails.
+        hasLeftRef.current = false
+      }
+    }
+    navigate(`/investigations/${roomId}`)
   }
 
   const startVoiceDialog = async () => {
@@ -122,12 +201,19 @@ export default function Interrogation() {
     if (mode === 'text') bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [transcript, mode])
 
-  // Tear down audio + microphone whenever we leave the room.
+  // Fallback teardown for any exit that skips leaveRoom() (browser back,
+  // header nav links, tab close mid-session) — leaveRoom already handles the
+  // deliberate path (waits for audio, then does this itself) and marks
+  // hasLeftRef so this doesn't fire the cooldown call twice.
   useEffect(() => {
     return () => {
       audioRef.current?.pause()
       recognitionRef.current?.stop()
       void endVoiceSessionRef.current()
+      const { id: roomId, suspectId: roomSuspectId } = roomRef.current
+      if (!hasLeftRef.current && roomId && roomSuspectId && modeRef.current !== 'select' && !endedRef.current) {
+        void api.leaveSuspect(roomId, roomSuspectId)
+      }
     }
   }, [])
 
@@ -261,35 +347,47 @@ export default function Interrogation() {
             How will you question
           </p>
           <h2 className="mt-2 font-display text-3xl text-stone-100">{suspect.name}?</h2>
-          <div className="mt-10 grid w-full gap-5 sm:grid-cols-2">
-            <button
-              onClick={startVoiceDialog}
-              className="panel group flex flex-col items-center gap-3 py-10 transition hover:border-gold-500"
-            >
-              <Mic aria-hidden="true" className="h-10 w-10 text-stone-300 transition-colors group-hover:text-gold-400" strokeWidth={1.5} />
-              <span className="font-display text-xl text-stone-100">Voice Dialog</span>
-              <span className="max-w-[16rem] text-center text-xs text-stone-500">
-                Speak face to face. They talk back aloud — watch their composure.
-              </span>
-            </button>
-            <button
-              onClick={() => setMode('text')}
-              className="panel group flex flex-col items-center gap-3 py-10 transition hover:border-gold-500"
-            >
-              <MessageCircle aria-hidden="true" className="h-10 w-10 text-stone-300 transition-colors group-hover:text-gold-400" strokeWidth={1.5} />
-              <span className="font-display text-xl text-stone-100">Text Chat</span>
-              <span className="max-w-[16rem] text-center text-xs text-stone-500">
-                Trade written questions. Precise, quotable, on the record.
-              </span>
-            </button>
-          </div>
-          <Link
-            to={`/investigations/${investigation.id}`}
+          {inCooldown ? (
+            <div className="panel mt-10 flex w-full flex-col items-center gap-2 py-10 text-center">
+              <p className="text-sm text-stone-300">
+                {suspect.name} walked out and needs a moment before speaking with you again.
+              </p>
+              <p className="font-display text-4xl text-gold-400">{formatCountdown(cooldownRemaining)}</p>
+              <p className="text-xs uppercase tracking-widest text-stone-600">until they'll talk</p>
+            </div>
+          ) : (
+            <div className="mt-10 grid w-full gap-5 sm:grid-cols-2">
+              <button
+                onClick={startVoiceDialog}
+                className="panel group flex flex-col items-center gap-3 py-10 transition hover:border-gold-500"
+              >
+                <Mic aria-hidden="true" className="h-10 w-10 text-stone-300 transition-colors group-hover:text-gold-400" strokeWidth={1.5} />
+                <span className="font-display text-xl text-stone-100">Voice Dialog</span>
+                <span className="max-w-[16rem] text-center text-xs text-stone-500">
+                  Speak face to face. They talk back aloud — watch their composure.
+                </span>
+              </button>
+              <button
+                onClick={() => setMode('text')}
+                className="panel group flex flex-col items-center gap-3 py-10 transition hover:border-gold-500"
+              >
+                <MessageCircle aria-hidden="true" className="h-10 w-10 text-stone-300 transition-colors group-hover:text-gold-400" strokeWidth={1.5} />
+                <span className="font-display text-xl text-stone-100">Text Chat</span>
+                <span className="max-w-[16rem] text-center text-xs text-stone-500">
+                  Trade written questions. Precise, quotable, on the record.
+                </span>
+              </button>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => void leaveRoom()}
+            disabled={leaving}
             className="btn-ghost mt-8 px-4 py-2 text-xs"
           >
             <ArrowLeft aria-hidden="true" className="mr-2 inline h-4 w-4" />
-            Back to the case
-          </Link>
+            {leaving ? 'One moment…' : 'Back to the case'}
+          </button>
         </main>
       </div>
     )
@@ -361,12 +459,14 @@ export default function Interrogation() {
           {ended ? (
             <div className="panel mb-4 text-center text-red-400">
               {suspect.name} has ended the conversation for good.
-              <Link
-                to={`/investigations/${investigation.id}`}
-                className="ml-2 text-gold-400 underline"
+              <button
+                type="button"
+                onClick={() => void leaveRoom()}
+                disabled={leaving}
+                className="ml-2 text-gold-400 underline disabled:opacity-60"
               >
-                Back to the case
-              </Link>
+                {leaving ? 'One moment…' : 'Back to the case'}
+              </button>
             </div>
           ) : (
             <div className="mb-4 flex flex-col items-center gap-4">
@@ -409,14 +509,15 @@ export default function Interrogation() {
               <MessageCircle aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5" />
               Switch to text
             </button>
-            <Link
-              to={`/investigations/${investigation.id}`}
-              onClick={() => { void leaveVoiceDialog() }}
+            <button
+              type="button"
+              onClick={() => void leaveRoom()}
+              disabled={leaving}
               className="btn-ghost px-3 py-1"
             >
               <ArrowLeft aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5" />
-              Case file
-            </Link>
+              {leaving ? 'Finishing…' : 'Case file'}
+            </button>
           </div>
         </main>
       </div>
@@ -509,9 +610,14 @@ export default function Interrogation() {
         {ended ? (
           <div className="panel text-center text-red-400">
             {suspect.name} has ended the conversation for good.
-            <Link to={`/investigations/${investigation.id}`} className="ml-2 text-gold-400 underline">
-              Back to the case
-            </Link>
+            <button
+              type="button"
+              onClick={() => void leaveRoom()}
+              disabled={leaving}
+              className="ml-2 text-gold-400 underline disabled:opacity-60"
+            >
+              {leaving ? 'One moment…' : 'Back to the case'}
+            </button>
           </div>
         ) : (
           <form
@@ -534,13 +640,15 @@ export default function Interrogation() {
                   </option>
                 ))}
               </select>
-              <Link
-                to={`/investigations/${investigation.id}`}
+              <button
+                type="button"
+                onClick={() => void leaveRoom()}
+                disabled={leaving}
                 className="btn-ghost ml-auto px-3 py-1 text-xs"
               >
                 <ArrowLeft aria-hidden="true" className="mr-1.5 inline h-3.5 w-3.5" />
-                Case file
-              </Link>
+                {leaving ? 'Finishing…' : 'Case file'}
+              </button>
             </div>
             <div className="flex gap-2">
               <input

@@ -7,7 +7,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.ratelimit import check_rate_limit
 from app.models.case import Case
-from app.services import case_pool, gemini, images, sanitize
+from app.services import case_pool, gemini, images, sanitize, voice_design
 
 router = APIRouter(prefix="/api/cases", tags=["cases"])
 
@@ -44,6 +44,8 @@ async def generate_case(body: GenerateRequest, user: AuthUser = Depends(get_curr
         body.crime_type, used_titles=used_titles, used_names=used_names
     )
     await images.add_suspect_portraits(case)  # best-effort, never raises
+    await images.add_evidence_images(case)  # best-effort, never raises
+    await voice_design.add_suspect_voices(case)  # best-effort, never raises
     result = await get_db().cases.insert_one(case.model_dump())
     return sanitize.public_case_summary(str(result.inserted_id), case)
 

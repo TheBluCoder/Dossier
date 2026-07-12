@@ -125,7 +125,9 @@ async def run_turn(context: VoiceContext, player_message: str):
     reply = await gemini.suspect_reply(case, suspect, state, history, player_message)
     trust = max(0, min(100, state.trust + reply.trust_change))
     patience = max(0, min(100, state.patience + reply.patience_change))
-    ended = reply.conversation_ended or patience == 0
+    # Patience hitting 0 is a precondition, never a trigger on its own — the
+    # suspect still has to actually choose to end it (see prompts.SUSPECT_SYSTEM).
+    ended = patience == 0 and reply.conversation_ended
     record = InterrogationMessage(
         investigation_id=context.investigation_id, user_id=context.user.id,
         suspect_id=context.suspect_id, player_message=player_message, input_type="voice",

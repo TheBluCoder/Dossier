@@ -1,18 +1,38 @@
+import re
+
 from bson import ObjectId
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
 
 from app.core.auth import AuthUser, get_current_user
 from app.core.db import get_db
-from app.services.profiles import public_profile, upsert_user
+from app.core.messages import ErrorMessages
+from app.services.profiles import public_profile, set_username, upsert_user
 
 router = APIRouter(prefix="/api", tags=["users"])
 
 LEADERBOARD_SIZE = 20
+USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9 _'.\-]{2,24}$")
+
+
+class UsernameUpdate(BaseModel):
+    name: str = Field(min_length=2, max_length=24)
 
 
 @router.get("/me")
 async def me(user: AuthUser = Depends(get_current_user)):
     doc = await upsert_user(user)
+    return public_profile(doc)
+
+
+@router.put("/profile/username")
+async def update_username(body: UsernameUpdate, user: AuthUser = Depends(get_current_user)):
+    """Let a player set a public display name distinct from their real
+    auth-provider name — many don't want that shown on the leaderboard."""
+    name = body.name.strip()
+    if not USERNAME_PATTERN.fullmatch(name):
+        raise HTTPException(status_code=422, detail=ErrorMessages.INVALID_USERNAME)
+    doc = await set_username(user.id, name)
     return public_profile(doc)
 
 

@@ -31,6 +31,9 @@ class ErrorMessages:
     MAX_ACTIVE_INVESTIGATIONS_REACHED = (
         "You already have 3 active investigations, Detective. Close one out before opening another."
     )
+    INVALID_USERNAME = (
+        "Detective name must be 2-24 characters: letters, numbers, spaces, and - _ . ' only."
+    )
 
     GENERATED_CASE_CULPRIT_COUNT = "Generated case must contain exactly one culprit."
     GENERATED_CASE_INVALID = "Case generation produced an invalid case. Try again."
@@ -63,3 +66,10 @@ class ErrorMessages:
     def suspect_refuses(name: str) -> str:
         """Build a character-specific refusal without exposing internal state."""
         return f"{name} refuses to speak with you again."
+
+    @staticmethod
+    def suspect_cooling_down(name: str, seconds_remaining: int) -> str:
+        """Build a cooldown message after the player has walked out on a suspect."""
+        minutes, seconds = divmod(max(seconds_remaining, 1), 60)
+        wait = f"{minutes}m {seconds}s" if minutes else f"{seconds}s"
+        return f"{name} is still composing themselves. Try again in {wait}."

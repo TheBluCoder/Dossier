@@ -52,6 +52,7 @@ class Suspect(BaseModel):
     alibi: str
     personality: str
     voice_id: str | None = None  # ElevenLabs voice
+    voice_description: str | None = None  # casting note used to design voice_id
     image_url: str | None = None  # generated portrait; null falls back to initials
     private: SuspectPrivate
 

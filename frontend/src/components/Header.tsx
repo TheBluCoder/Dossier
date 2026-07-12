@@ -1,5 +1,7 @@
 import { LogOut, UserRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
+import { api } from '../lib/api'
 import { useAuth } from '../lib/auth'
 
 const NAV = [
@@ -10,6 +12,19 @@ const NAV = [
 
 export default function Header({ subtitle }: { subtitle?: string }) {
   const { user, signOut } = useAuth()
+  // The Clerk/Google name (`user.name`) is not the same as the player's
+  // editable public display name (Profile page, leaderboard) — prefer the
+  // latter here too, falling back to the auth name until it loads.
+  const [displayName, setDisplayName] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!user) {
+      setDisplayName(null)
+      return
+    }
+    api.getMe().then((profile) => setDisplayName(profile.name)).catch(() => {})
+  }, [user])
+
   return (
     <header className="sticky top-0 z-40 shrink-0 border-b-2 border-noir-700 px-6 pt-4 shadow-[0_12px_35px_rgba(0,0,0,.35)]">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 pb-3">
@@ -32,14 +47,14 @@ export default function Header({ subtitle }: { subtitle?: string }) {
             <Link
               to="/profile"
               className="detective-id group"
-              aria-label={`View ${user.name}'s detective profile`}
+              aria-label={`View ${displayName ?? user.name}'s detective profile`}
             >
               <span className="detective-id-photo">
                 {user.avatarUrl ? <img src={user.avatarUrl} alt="" /> : <UserRound className="h-4 w-4" />}
               </span>
               <span className="hidden min-w-0 text-left sm:block">
                 <span className="block max-w-32 truncate font-display text-xs uppercase tracking-wider text-stone-300 group-hover:text-gold-400">
-                  {user.name}
+                  {displayName ?? user.name}
                 </span>
                 <span className="block text-[8px] uppercase tracking-[.22em] text-stone-600">
                   View detective file

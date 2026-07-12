@@ -43,6 +43,11 @@ export const api = {
   getMe: () => request<UserProfile>('/api/me'),
   getProfile: () => request<ProfileWithHistory>('/api/profile'),
   getLeaderboard: () => request<Leaderboard>('/api/leaderboard'),
+  updateUsername: (name: string) =>
+    request<UserProfile>('/api/profile/username', {
+      method: 'PUT',
+      body: JSON.stringify({ name }),
+    }),
 
   listCases: () => request<CaseDocket>('/api/cases'),
   getCaseBriefing: (caseId: string) => request<CaseBriefing>(`/api/cases/${caseId}`),
@@ -69,6 +74,11 @@ export const api = {
 
   getMessages: (id: string, suspectId: string) =>
     request<Message[]>(`/api/investigations/${id}/suspects/${suspectId}/messages`),
+  leaveSuspect: (id: string, suspectId: string) =>
+    request<{ cooldown_until: string | null }>(
+      `/api/investigations/${id}/suspects/${suspectId}/leave`,
+      { method: 'POST' },
+    ),
   getVoiceToken: (id: string, suspectId: string) =>
     request<{ token: string }>(`/api/audio/speech-engine/token/${id}/${suspectId}`, {
       method: 'POST',
