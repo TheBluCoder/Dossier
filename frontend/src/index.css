@@ -30,6 +30,12 @@ button,a,input,textarea,select { font:inherit; }
 .case-folder-body::before { content:'';position:absolute;inset:0;opacity:.22;mix-blend-mode:multiply;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='p'%3E%3CfeTurbulence baseFrequency='.45' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23p)' opacity='.32'/%3E%3C/svg%3E");pointer-events:none; }
 .case-folder-body::after { content:'';position:absolute;width:52px;height:70px;right:14px;bottom:-15px;border:2px solid rgba(56,35,19,.11);border-radius:48% 52% 45% 55%;transform:rotate(14deg);box-shadow:inset 0 0 0 5px rgba(56,35,19,.025),inset 0 0 0 9px rgba(56,35,19,.035);pointer-events:none; }
 .case-folder-priority .case-folder-tab,.case-folder-priority .case-folder-body { background-color:#b0925c;border-color:#7d5d35; }
+/* Smaller dossier card for the dashboard's active-investigations rail —
+   same folder look as the docket, trimmed down since it only needs a
+   title + resume link, not the full case summary. */
+.case-folder-compact { margin-top:1rem; }
+.case-folder-compact .case-folder-tab { width:62%; }
+.case-folder-compact .case-folder-body { min-height:auto;padding:1rem; }
 .folder-stamp { border:3px double rgba(113,12,13,.72);color:rgba(113,12,13,.82);padding:.28rem .45rem;font-family:Georgia,serif;font-size:.63rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase;transform:rotate(-7deg); }
 @keyframes lamp-flicker { 0%,91%,95%,100%{opacity:1} 92%{opacity:.58} 93%{opacity:.92} }
 .lamp-flicker { animation:lamp-flicker 8s infinite; }

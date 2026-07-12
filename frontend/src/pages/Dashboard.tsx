@@ -49,22 +49,22 @@ function CaseCard({ c, priority }: { c: CaseSummary; priority: boolean }) {
   )
 }
 
-function ActiveCaseRow({ inv }: { inv: ActiveInvestigation }) {
+function ActiveCaseFolder({ inv }: { inv: ActiveInvestigation }) {
   const c = inv.case_summary
   return (
-    <Link
-      to={`/investigations/${inv.id}`}
-      className="panel flex items-center justify-between gap-4 transition hover:border-gold-500"
-    >
-      <div className="min-w-0">
-        <p className="text-[9px] uppercase tracking-[.25em] text-stone-600">
+    <Link to={`/investigations/${inv.id}`} className="case-folder case-folder-compact group block">
+      <div className="case-folder-tab">In Progress</div>
+      <div className="case-folder-body relative z-10 flex flex-col gap-1.5">
+        <p className="text-[8px] font-bold uppercase tracking-[.22em] text-[#4e3825]/70">
           {c.crime_type} · {difficultyLabel(c.difficulty)}
         </p>
-        <p className="truncate font-display text-lg text-stone-100">{c.title}</p>
+        <h4 className="line-clamp-2 font-display text-base font-bold uppercase leading-tight text-[#281b12]">
+          {c.title}
+        </h4>
+        <span className="mt-auto w-fit border-b-2 border-[#721516] pb-0.5 text-[10px] font-black uppercase tracking-wide text-[#5e1112] transition group-hover:text-black">
+          Resume →
+        </span>
       </div>
-      <span className="shrink-0 text-xs font-black uppercase tracking-widest text-gold-400">
-        Resume →
-      </span>
     </Link>
   )
 }
@@ -72,16 +72,16 @@ function ActiveCaseRow({ inv }: { inv: ActiveInvestigation }) {
 function ActiveInvestigationsRail({ investigations }: { investigations: ActiveInvestigation[] }) {
   if (investigations.length === 0) return null
   return (
-    <div className="mb-6 shrink-0">
+    <div className="mb-8 shrink-0">
       <div className="mb-3 flex items-end justify-between border-b border-noir-800 pb-3">
         <h2 className="section-title text-base">Active Investigations</h2>
         <span className="text-sm normal-case tracking-normal text-stone-500">
           {investigations.length} / {MAX_ACTIVE_INVESTIGATIONS} in progress
         </span>
       </div>
-      <div className="space-y-2">
+      <div className="grid gap-x-5 gap-y-6 sm:grid-cols-3">
         {investigations.map((inv) => (
-          <ActiveCaseRow key={inv.id} inv={inv} />
+          <ActiveCaseFolder key={inv.id} inv={inv} />
         ))}
       </div>
     </div>
