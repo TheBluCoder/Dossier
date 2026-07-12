@@ -17,7 +17,10 @@ function difficultyLabel(d: number) {
 
 function CaseCard({ c, priority }: { c: CaseSummary; priority: boolean }) {
   return (
-    <div className={`case-folder ${priority ? 'case-folder-priority' : ''}`}>
+    <Link
+      to={`/cases/${c.id}`}
+      className={`case-folder group block ${priority ? 'case-folder-priority' : ''}`}
+    >
       <div className="case-folder-tab">Case #{c.id.slice(0, 8)}</div>
       <div className="case-folder-body flex h-full flex-col gap-3">
         <div className="flex items-start justify-between gap-2">
@@ -40,12 +43,12 @@ function CaseCard({ c, priority }: { c: CaseSummary; priority: boolean }) {
             {difficultyLabel(c.difficulty)} ·{' '}
             <span className="font-mono font-bold text-[#721516]">+{c.reward_rs} RS</span>
           </span>
-          <Link to={`/cases/${c.id}`} className="border-b-2 border-[#721516] pb-0.5 text-xs font-black text-[#5e1112] transition hover:text-black">
+          <span className="border-b-2 border-[#721516] pb-0.5 text-xs font-black text-[#5e1112] transition group-hover:text-black">
             Open file →
-          </Link>
+          </span>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
