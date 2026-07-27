@@ -1,0 +1,67 @@
+[
+  {
+    "name": "Detective K — Investigator Game",
+    "description": "<b>Detective K</b> is a browser-based AI detective game where players select cases, examine evidence, interrogate autonomous suspects by text or voice, and submit a final accusation. Each suspect is powered by Gemini with an individual personality, private knowledge, emotional state, and changing trust and patience, creating investigations that respond dynamically instead of following fixed dialogue trees. The game also includes generated suspect portraits and evidence imagery, case reconstruction, player profiles, reputation tiers, and a global leaderboard.",
+    "what": "This project is a <b>full-stack AI investigation game</b> built with <b>React</b>, <b>TypeScript</b>, <b>FastAPI</b>, and <b>MongoDB</b>. Players receive a case briefing, review suspect dossiers and evidence, keep investigation notes, and conduct free-form interrogations with independent Gemini-powered agents. Responses stream to the browser with Server-Sent Events, while an ElevenLabs-powered voice mode supports hands-free conversations over WebSockets and gives generated suspects voices based on their age, background, accent, and personality. The backend protects private solution data until a verdict is submitted, generates replacement cases in the background, and coordinates Gemini, ElevenLabs, Replicate, Cloudinary, Clerk, and MongoDB behind a single authenticated API.",
+    "why": "I wanted to explore how generative AI could create a mystery game where investigation depends on the player's own questions and reasoning rather than choosing from predetermined dialogue options. Detective games often guide players through a fixed sequence, which can make interrogations feel predictable. This project instead gives every suspect bounded knowledge, motives, secrets, emotional reactions, and persistent conversation state so players can build trust, apply pressure, present evidence, and decide for themselves when they have enough information to accuse someone.",
+    "impact": "The project turns multiple AI and media services into a cohesive playable experience rather than a collection of isolated demos. It demonstrates how to build stateful AI characters with controlled knowledge boundaries, stream model output in real time, synchronize text and voice interactions, protect hidden game data at the API boundary, and support persistent progression across cases. As a portfolio project, it highlights full-stack product development, AI orchestration, prompt and data-boundary design, asynchronous Python services, real-time browser communication, authentication, media generation, and deployment of a multi-service application.",
+    "image": "",
+    "video": "https://youtu.be/ic6YxyDf5Oo?si=Ws92_bn1-npFZl1M",
+    "demo": "https://dossier.blucoder.cc",
+    "type": "web application",
+    "source_code_url": "https://github.com/TheBluCoder/investigator-game",
+    "tech_stack": [
+      {
+        "name": "React",
+        "icon": "devicon:react"
+      },
+      {
+        "name": "TypeScript",
+        "icon": "devicon:typescript"
+      },
+      {
+        "name": "Tailwind CSS",
+        "icon": "devicon:tailwindcss"
+      },
+      {
+        "name": "FastAPI",
+        "icon": "devicon:fastapi"
+      },
+      {
+        "name": "MongoDB",
+        "icon": "devicon:mongodb"
+      },
+      {
+        "name": "Google Gemini",
+        "icon": "simple-icons:googlegemini"
+      },
+      {
+        "name": "ElevenLabs",
+        "icon": "simple-icons:elevenlabs"
+      },
+      {
+        "name": "Replicate",
+        "icon": "simple-icons:replicate"
+      },
+      {
+        "name": "Cloudinary",
+        "icon": "simple-icons:cloudinary"
+      },
+      {
+        "name": "Clerk",
+        "icon": "simple-icons:clerk"
+      }
+    ],
+    "topics": [
+      "ai-game",
+      "detective-game",
+      "generative-ai",
+      "gemini",
+      "voice-ai",
+      "react",
+      "fastapi",
+      "mongodb"
+    ],
+    "updated_at": "2026-07-26T00:00:00-04:00"
+  }
+]
