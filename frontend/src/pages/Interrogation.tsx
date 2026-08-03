@@ -26,15 +26,15 @@ type Mode = 'select' | 'text' | 'voice'
 interface TranscriptEntry {
   role: 'player' | 'suspect'
   text: string
-  emotion?: string
   evidenceId?: string | null
   streaming?: boolean
-  trustDelta?: number
-  patienceDelta?: number
 }
 
-function stripAudioTags(text: string): string {
-  return text.replace(/^(?:\s*\[[^\]]+\])+\s*/, '').trimStart()
+function visibleDialogue(text: string): string {
+  return text
+    .replace(/^(?:\s*\[[^\]]+\])+\s*/, '')
+    .replace(/\*[^*]*(?:\*|$)/g, '')
+    .trimStart()
 }
 
 function formatCountdown(totalSeconds: number): string {
@@ -92,7 +92,7 @@ export default function Interrogation() {
       const source = message.source ?? message.role
       if (!rawText || !['user', 'ai', 'agent'].includes(source)) return
       const role: 'player' | 'suspect' = source === 'user' ? 'player' : 'suspect'
-      const text = role === 'suspect' ? conversationalTime(stripAudioTags(rawText)) : rawText
+      const text = role === 'suspect' ? conversationalTime(visibleDialogue(rawText)) : rawText
       setTranscript((current) => {
         const last = current[current.length - 1]
         return last?.role === role && last.text === text ? current : [...current, { role, text }]
@@ -191,7 +191,7 @@ export default function Interrogation() {
       const entries: TranscriptEntry[] = []
       for (const m of messages) {
         entries.push({ role: 'player', text: m.player_message, evidenceId: m.evidence_id })
-        entries.push({ role: 'suspect', text: conversationalTime(m.response), emotion: m.emotion })
+        entries.push({ role: 'suspect', text: conversationalTime(visibleDialogue(m.response)) })
       }
       setTranscript(entries)
     })
@@ -276,10 +276,7 @@ export default function Interrogation() {
             const copy = [...t]
             copy[copy.length - 1] = {
               role: 'suspect',
-              text: conversationalTime(message.response),
-              emotion: message.emotion,
-              trustDelta: message.trust_after - message.trust_before,
-              patienceDelta: message.patience_after - message.patience_before,
+              text: conversationalTime(visibleDialogue(message.response)),
             }
             return copy
           })
@@ -579,26 +576,9 @@ export default function Interrogation() {
                   </p>
                 )}
                 <p className="whitespace-pre-wrap">
-                  {entry.text}
+                  {entry.role === 'suspect' ? visibleDialogue(entry.text) : entry.text}
                   {entry.streaming && <span className="animate-pulse text-gold-400">▋</span>}
                 </p>
-                {((entry.emotion && entry.emotion !== 'neutral') ||
-                  !!entry.trustDelta ||
-                  !!entry.patienceDelta) && (
-                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs italic text-stone-500">
-                    {entry.emotion && entry.emotion !== 'neutral' && <span>({entry.emotion})</span>}
-                    {!!entry.trustDelta && (
-                      <span className={entry.trustDelta > 0 ? 'text-emerald-400/80' : 'text-red-400/80'}>
-                        trust {entry.trustDelta > 0 ? '+' : ''}{entry.trustDelta}
-                      </span>
-                    )}
-                    {!!entry.patienceDelta && (
-                      <span className={entry.patienceDelta > 0 ? 'text-emerald-400/80' : 'text-red-400/80'}>
-                        patience {entry.patienceDelta > 0 ? '+' : ''}{entry.patienceDelta}
-                      </span>
-                    )}
-                  </p>
-                )}
               </div>
             </div>
           ))}
