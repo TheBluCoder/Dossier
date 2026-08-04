@@ -1,4 +1,4 @@
-# Detective K — Investigator Game
+# Dossier (CuHacking 7)
 
 A single-player, browser-based AI detective game. Pick a case from the
 commission dashboard, read the briefing, review the evidence, interrogate
